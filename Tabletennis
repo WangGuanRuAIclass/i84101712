@@ -1,36 +1,1075 @@
-# AGENTS.md — 專業桌球品牌器材資料庫 (Table Tennis Equipment DB)
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TT-SPEC | 專業桌球品牌與器材客觀規格庫</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif; }
+    .wood-layer { transition: all 0.2s ease; }
+    .wood-layer:hover { transform: scaleX(1.02); }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col pb-20">
 
-你是一位專精於桌球器材規格整理、資料結構化與資料庫維護的 AI 架構師。
-本專案是一個「專業桌球品牌器材查詢網站」的資料核心，支援**雙向導入入口（1. 依品牌瀏覽、2. 依器材類別篩選）**。
+  <!-- 頂部導航列 -->
+  <header class="bg-slate-900 text-white sticky top-0 z-30 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="navigate('home')">
+        <span class="bg-amber-500 text-slate-950 font-black px-2.5 py-1 rounded text-sm tracking-wider">TT-SPEC</span>
+        <span class="font-bold text-lg tracking-tight">桌球器材客觀規格庫</span>
+        <span class="hidden md:inline-block text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">Schema v2.0 預覽原型</span>
+      </div>
+      <nav class="flex items-center space-x-2 sm:space-x-6 text-sm font-medium">
+        <button onclick="navigate('home')" class="hover:text-amber-400 transition">首頁總覽</button>
+        <button onclick="navigate('brands')" class="hover:text-amber-400 transition">依品牌瀏覽</button>
+        <button onclick="navigate('category', 'blade')" class="hover:text-amber-400 transition">底板庫</button>
+        <button onclick="navigate('category', 'rubber')" class="hover:text-amber-400 transition">膠皮庫</button>
+        <button onclick="openCompareModal()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1.5 rounded-lg flex items-center space-x-1.5 transition">
+          <span>規格對比</span>
+          <span id="nav-compare-count" class="bg-amber-500 text-slate-950 font-bold text-xs px-1.5 py-0.2 rounded-full">0</span>
+        </button>
+      </nav>
+    </div>
+  </header>
 
-你的任務是將使用者提供的原始官方型錄、產品規格表或技術文件，編譯成**格式嚴格統一、純客觀硬規格、零主觀體感評分**的 Markdown（YAML Frontmatter）資料庫檔案，並持續維護全庫的索引與關聯一致性。
+  <!-- 主內容動態渲染區 -->
+  <main id="app" class="max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 flex-grow"></main>
 
----
+  <!-- 底部浮動規格對比列 -->
+  <div id="compare-bar" class="hidden fixed bottom-0 inset-x-0 bg-slate-900 text-white border-t border-slate-700 shadow-2xl z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center space-x-3">
+        <span class="text-xs font-bold uppercase tracking-wider text-amber-400">已選對比項目：</span>
+        <div id="compare-chips" class="flex flex-wrap gap-2"></div>
+      </div>
+      <div class="flex items-center space-x-3">
+        <button onclick="clearCompare()" class="text-xs text-slate-400 hover:text-white underline">清空</button>
+        <button onclick="openCompareModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm px-4 py-1.5 rounded-lg transition">
+          開始並排對照規格 →
+        </button>
+      </div>
+    </div>
+  </div>
 
-## 一、 核心設計原則（最高指導鐵律）
+  <!-- 規格並排對比彈出視窗 (Modal) -->
+  <div id="compare-modal" class="hidden fixed inset-0 bg-slate-950/75 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+      <div class="px-6 py-4 bg-slate-900 text-white flex justify-between items-center">
+        <div>
+          <h3 class="text-lg font-bold">純客觀硬規格並排對照表</h3>
+          <p class="text-xs text-slate-400">黃底標示為不同型號間的物理參數差異項</p>
+        </div>
+        <button onclick="closeCompareModal()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+      </div>
+      <div id="compare-table-container" class="p-6 overflow-auto"></div>
+    </div>
+  </div>
 
-1. **純客觀硬規格，嚴禁主觀評分**：
-   - 絕對不可加入「速度 9.5 分、旋轉 9.0 分、手感超彈、神板」等主觀體感數值或行銷形容詞。
-   - 所有物理特性必須透過**客觀材料與幾何數據**呈現（例如：木層材質、纖維位置、板身厚度、海綿硬度標準、ITTF 認證編號）。
-   - 若官方型錄提供品牌自定義的 Speed / Spin 數值，僅可註明為 `official_brand_rating`（註明僅供同品牌內部參考），不得作為跨品牌比較基準。
+  <script>
+    // =========================================================================
+    // 模擬資料庫 (對應 data/brands/*.md 與 data/products/**/*.md 的 YAML 結構)
+    // =========================================================================
+    const DB = {
+      brands: [
+        {
+          id: "butterfly",
+          name_en: "Butterfly",
+          name_zh: "蝴蝶",
+          name_jp: "バタフライ",
+          country: "Japan",
+          founded_year: 1950,
+          parent_company: "Tamasu Co., Ltd.",
+          core_technologies: ["ALC (芳碳纖維)", "ZLC (柴龍碳素)", "Super ZLC", "Spring Sponge X"],
+          description: "由田舛彥介於1950年在日本創立，擁有自家研發中心 Butterfly Tec 與日本本土木材加工廠。"
+        },
+        {
+          id: "dhs",
+          name_en: "DHS",
+          name_zh: "紅雙喜",
+          name_jp: null,
+          country: "China",
+          founded_year: 1959,
+          parent_company: "上海紅雙喜股份有限公司",
+          core_technologies: ["NEO 預打底技術", "高密度藍海綿", "內置芳碳結構"],
+          description: "中國最具代表性的專業桌球器材製造商，多屆奧運會與世錦賽指定用球與球桌供應商。"
+        },
+        {
+          id: "tibhar",
+          name_en: "Tibhar",
+          name_zh: "挺拔",
+          name_jp: null,
+          country: "Germany",
+          founded_year: 1969,
+          parent_company: "TIBHAR Tibor Harangozo GmbH",
+          core_technologies: ["RED Power Sponge", "SPI 內能技術"],
+          description: "總部位於德國薩爾布呂肯，德系 ESN 蛋糕海綿膠皮代表品牌之一。"
+        },
+        {
+          id: "mizuno",
+          name_en: "Mizuno",
+          name_zh: "美津濃",
+          name_jp: "ミズノ",
+          country: "Japan",
+          founded_year: 1906,
+          parent_company: "Mizuno Corporation",
+          core_technologies: ["Mizuno Wave 波浪片", "Mizuno Enerzy", "XG 高抓地生膠"],
+          description: "日本綜合運動品牌，在專業室內桌球鞋領域以輕量化與亞洲楦頭設計著稱。"
+        },
+        {
+          id: "nittaku",
+          name_en: "Nittaku",
+          name_zh: "尼塔庫",
+          name_jp: "ニッタク",
+          country: "Japan",
+          founded_year: 1920,
+          parent_company: "日本卓球株式会社",
+          core_technologies: ["日本製三星 ABS 球工藝", "Acoustic 弦樂器木材黏合技術"],
+          description: "日本歷史最悠久的桌球專業品牌之一，其日本製三星比賽球為多項國際大賽指定用球。"
+        }
+      ],
+      products: [
+        // --- 第一階段主力：底板 (Blades) ---
+        {
+          id: "butterfly-viscaria",
+          brand_id: "butterfly",
+          category: "blade",
+          series: "Viscaria",
+          name_en: "Viscaria",
+          name_zh: "維斯卡利亞",
+          aliases: ["蝴蝶王", "VIS", "30041"],
+          release_year: 1993,
+          status: "active",
+          specs: {
+            playstyle: "OFF",
+            structure_type: "outer-fiber",
+            structure_label: "外置纖維",
+            plies_count: 7,
+            composition: "5木 + 2 ALC (外置)",
+            wood_layers: {
+              surface: "Koto (寇頭)",
+              fiber: "Arylate-Carbon (芳碳纖維)",
+              medial: "Limba (林巴)",
+              core: "Kiri (桐木)"
+            },
+            thickness_mm: 5.8,
+            head_size_mm: { length: 157, width: 150 },
+            handle_types: [
+              { code: "FL", length_mm: 100, thickness_mm: 25, width_end_mm: 34 },
+              { code: "ST", length_mm: 100, thickness_mm: 23, width_end_mm: 28 }
+            ],
+            weight_avg_g: 87,
+            made_in: "Japan",
+            jtta_approved: true
+          },
+          notes: "表層採用硬脆的 Koto 面材，緊貼 Arylate-Carbon 纖維層，大芯為輕質桐木。為後續 Timo Boll ALC、張繼科 ALC 的結構原型。"
+        },
+        {
+          id: "butterfly-innerforce-layer-alc",
+          brand_id: "butterfly",
+          category: "blade",
+          series: "Innerforce Layer",
+          name_en: "Innerforce Layer ALC",
+          name_zh: "內置芳碳 ALC",
+          aliases: ["內置ALC", "36701"],
+          release_year: 2015,
+          status: "active",
+          specs: {
+            playstyle: "OFF",
+            structure_type: "inner-fiber",
+            structure_label: "內置纖維",
+            plies_count: 7,
+            composition: "5木 + 2 ALC (內置)",
+            wood_layers: {
+              surface: "Limba (林巴)",
+              medial: "Ayous (阿尤斯)",
+              fiber: "Arylate-Carbon (芳碳纖維)",
+              core: "Ayous (阿尤斯)"
+            },
+            thickness_mm: 6.0,
+            head_size_mm: { length: 157, width: 150 },
+            handle_types: [
+              { code: "FL", length_mm: 100, thickness_mm: 25, width_end_mm: 34 },
+              { code: "ST", length_mm: 100, thickness_mm: 23, width_end_mm: 28 }
+            ],
+            weight_avg_g: 88,
+            made_in: "Japan",
+            jtta_approved: true
+          },
+          notes: "採用 Innerfiber 內置技術，將 ALC 纖維層置於力材下方緊貼大芯，表層改用較柔和的 Limba 面材。"
+        },
+        {
+          id: "dhs-hurricane-long-5",
+          brand_id: "dhs",
+          category: "blade",
+          series: "Hurricane Long",
+          name_en: "Hurricane Long 5",
+          name_zh: "狂飆龍5",
+          aliases: ["龍五", "HL5", "W968市售版"],
+          release_year: 2013,
+          status: "active",
+          specs: {
+            playstyle: "OFF+",
+            structure_type: "inner-fiber",
+            structure_label: "內置纖維",
+            plies_count: 7,
+            composition: "5木 + 2 芳碳 (內置護芯)",
+            wood_layers: {
+              surface: "Limba (林巴)",
+              medial: "Ayous (阿尤斯)",
+              fiber: "Arylate-Carbon (芳碳纖維)",
+              core: "Ayous (阿尤斯)"
+            },
+            thickness_mm: 5.9,
+            head_size_mm: { length: 158, width: 151 },
+            handle_types: [
+              { code: "FL", length_mm: 101, thickness_mm: 25, width_end_mm: 34 },
+              { code: "CS", length_mm: 82, thickness_mm: 24, width_end_mm: 32 }
+            ],
+            weight_avg_g: 89,
+            made_in: "China",
+            jtta_approved: false
+          },
+          notes: "採用護芯芳碳結構（纖維緊貼大芯），拍面尺寸（158×151mm）略大於日系標準板面。"
+        },
 
-2. **分階段擴充路線圖 (Roadmap)**：
-   - **第一階段 MVP（當前主力）**：`blades`（底板）、`rubbers`（膠皮）以及 `brands`（品牌基本資料）。
-   - **第二階段（預留）**：`shoes`（桌球鞋）、`apparel`（球衣服飾）、`balls`（用球）。
-   - **第三階段（預留）**：`accessories`（護邊條、膠水等周邊）與 `tables`（球桌）。
+        // --- 第一階段主力：膠皮 (Rubbers) ---
+        {
+          id: "dhs-hurricane-3-neo",
+          brand_id: "dhs",
+          category: "rubber",
+          series: "Hurricane",
+          name_en: "Hurricane 3 NEO",
+          name_zh: "NEO 狂飆3",
+          aliases: ["普狂3", "NEO狂3", "H3 NEO"],
+          release_year: 2009,
+          status: "active",
+          specs: {
+            rubber_type: "inverted",
+            rubber_type_label: "反膠",
+            topsheet_surface: "tacky",
+            topsheet_label: "高黏性膠面",
+            sponge_type: "高密度海綿 (出廠預打底)",
+            sponge_colors: ["Orange", "Blue"],
+            hardness_scale: "Shore-A (中國標準)",
+            hardness_values: "37° / 38° / 39° / 40° / 41°",
+            equivalent_shore_c: "約 47.5° - 52.5°",
+            sponge_thickness_mm: ["2.1", "2.15", "2.2"],
+            cut_weight_avg_g: 49,
+            made_in: "China",
+            ittf_approved_code: "24-108"
+          },
+          notes: "出廠海綿經過 NEO 預打底真空密封處理；市售版主要提供 39° 與 40°（邵氏 A）。"
+        },
+        {
+          id: "butterfly-dignics-09c",
+          brand_id: "butterfly",
+          category: "rubber",
+          series: "Dignics",
+          name_en: "Dignics 09C",
+          name_zh: "Dignics 09C 黏性澀套",
+          aliases: ["D09C", "09C"],
+          release_year: 2020,
+          status: "active",
+          specs: {
+            rubber_type: "inverted",
+            rubber_type_label: "反膠",
+            topsheet_surface: "tacky-hybrid",
+            topsheet_label: "微黏性膠面",
+            sponge_type: "Spring Sponge X",
+            sponge_colors: ["Red (特定橘紅海綿)"],
+            hardness_scale: "Butterfly Scale",
+            hardness_values: "44°",
+            equivalent_shore_c: "約 53.0° - 55.0°",
+            sponge_thickness_mm: ["1.9", "2.1"],
+            cut_weight_avg_g: 50,
+            made_in: "Japan",
+            ittf_approved_code: "14-053"
+          },
+          notes: "結合微黏性膠面與高硬度 44° Spring Sponge X 海綿，開發代號為 No.209。"
+        },
+        {
+          id: "tibhar-evolution-mx-p",
+          brand_id: "tibhar",
+          category: "rubber",
+          series: "Evolution",
+          name_en: "Evolution MX-P",
+          name_zh: "變革 MX-P",
+          aliases: ["MXP", "挺拔MXP"],
+          release_year: 2012,
+          status: "active",
+          specs: {
+            rubber_type: "inverted",
+            rubber_type_label: "反膠",
+            topsheet_surface: "grippy",
+            topsheet_label: "純澀性膠面",
+            sponge_type: "RED Power 蛋糕海綿",
+            sponge_colors: ["Red"],
+            hardness_scale: "Shore-C (德系標準)",
+            hardness_values: "47.5°",
+            equivalent_shore_c: "47.5°",
+            sponge_thickness_mm: ["1.9", "2.1", "Max"],
+            cut_weight_avg_g: 47,
+            made_in: "Germany",
+            ittf_approved_code: "74-018"
+          },
+          notes: "德系 ESN 工廠代工，採用大孔徑紅色蛋糕海綿與高張力澀性膠面。"
+        },
 
----
+        // --- 第二階段擴充：球鞋 / 球衣 / 用球 ---
+        {
+          id: "mizuno-wave-drive-9",
+          brand_id: "mizuno",
+          category: "shoe",
+          series: "Wave Drive",
+          name_en: "Wave Drive 9",
+          name_zh: "Wave Drive 9 桌球鞋",
+          aliases: ["WD9", "81GA2205"],
+          release_year: 2022,
+          status: "active",
+          specs: {
+            weight_g: 260,
+            weight_ref: "26.0 cm 單腳",
+            width_fit: "2E (Standard 標準楦)",
+            outsole_type: "XG 無痕生膠大底",
+            cushion_tech: "Mizuno Enerzy + Wave 波浪片",
+            size_range_cm: "22.5 - 29.0 cm",
+            made_in: "Vietnam"
+          },
+          notes: "搭載 Mizuno Enerzy 高回彈中底材料，另有獨立寬楦版（3E）型號。"
+        },
+        {
+          id: "butterfly-official-match-shirt",
+          brand_id: "butterfly",
+          category: "apparel",
+          series: "Match Wear",
+          name_en: "Butterfly Official Match Shirt",
+          name_zh: "蝴蝶 JTTA 認證比賽上衣",
+          aliases: ["蝴蝶比賽服"],
+          release_year: 2026,
+          status: "active",
+          specs: {
+            apparel_type: "比賽上衣 (Shirt)",
+            jtta_approved: true,
+            sizing_standard: "Asian (亞版/日版)",
+            material: "100% Polyester 吸濕速乾機能布",
+            available_colors: ["Navy", "Black", "Red"]
+          },
+          notes: "下擺附有日本桌球協會（JTTA）官方認證織標，符合正式賽事服裝規定。"
+        },
+        {
+          id: "nittaku-3-star-premium-clean",
+          brand_id: "nittaku",
+          category: "ball",
+          series: "Premium",
+          name_en: "Nittaku 3-Star Premium Clean",
+          name_zh: "尼塔庫日本製三星比賽球",
+          aliases: ["Nittaku三星", "日本三星球"],
+          release_year: 2021,
+          status: "active",
+          specs: {
+            star_rating: "3星 (ITTF 認證比賽球)",
+            seam_type: "有縫球 (Seamed)",
+            material: "ABS 塑膠 + 抗菌塗層",
+            diameter_mm: "40.0 mm (40+)",
+            made_in: "Japan"
+          },
+          notes: "日本國內工廠製造，表面具備 Clean 抗菌加工處理。"
+        }
+      ]
+    };
 
-## 二、 三層式資料夾結構 (Architecture)
+    // =========================================================================
+    // 狀態管理 (Router & Filters & Compare)
+    // =========================================================================
+    let state = {
+      view: "home",        // home | brands | brand-detail | category | product-detail
+      param: null,
+      searchQuery: "",
+      compareList: [],     // 存放 product.id
+      filters: {
+        brand: "all",
+        bladeStructure: "all",
+        rubberSurface: "all"
+      }
+    };
 
-```text
-tt-equipment-db/
-├── AGENTS.md                  # 本規範檔案（Schema 與工作流定義）
-├── raw/                       # 【原始資料層 — 唯讀】存放官網截圖、型錄 PDF/文字、規格表，嚴禁修改或刪除
-└── data/                      # 【結構化資料庫層 — 由你全權維護】
-    ├── index.md               # 全庫總目錄（供快速檢索與統計各品牌/品類數量）
-    ├── log.md                 # 純附加（Append-only）時間軸變更紀錄
-    ├── brands/                # 入口一：品牌檔案（如 butterfly.md, dhs.md）
-    └── products/              # 入口二：器材檔案（按類別分資料夾）
-        ├── blades/            # 第一階段主力：底板
-        └── rubbers/           # 第一階段主力：膠皮
+    function getBrand(brandId) {
+      return DB.brands.find(b => b.id === brandId) || { name_en: brandId, name_zh: "" };
+    }
+
+    function navigate(view, param = null) {
+      state.view = view;
+      state.param = param;
+      // 切換類別時重置子篩選
+      if (view === "category") {
+        state.filters = { brand: "all", bladeStructure: "all", rubberSurface: "all" };
+      }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      render();
+    }
+
+    // =========================================================================
+    // 對比車功能 (Compare Drawer)
+    // =========================================================================
+    function toggleCompare(productId, event) {
+      if (event) event.stopPropagation();
+      const idx = state.compareList.indexOf(productId);
+      if (idx > -1) {
+        state.compareList.splice(idx, 1);
+      } else {
+        if (state.compareList.length >= 4) {
+          alert("最多同時並排對比 4 項器材！");
+          return;
+        }
+        // 檢查是否為同類別（不同類別硬規格欄位不同）
+        if (state.compareList.length > 0) {
+          const firstItem = DB.products.find(p => p.id === state.compareList[0]);
+          const currentItem = DB.products.find(p => p.id === productId);
+          if (firstItem.category !== currentItem.category) {
+            alert(`請選擇相同類別進行對比（目前對比車內為「${categoryName(firstItem.category)}」）。`);
+            return;
+          }
+        }
+        state.compareList.push(productId);
+      }
+      updateCompareBar();
+      render();
+    }
+
+    function clearCompare() {
+      state.compareList = [];
+      updateCompareBar();
+      render();
+    }
+
+    function updateCompareBar() {
+      const bar = document.getElementById("compare-bar");
+      const countBadge = document.getElementById("nav-compare-count");
+      const chips = document.getElementById("compare-chips");
+      countBadge.textContent = state.compareList.length;
+
+      if (state.compareList.length === 0) {
+        bar.classList.add("hidden");
+        return;
+      }
+      bar.classList.remove("hidden");
+      chips.innerHTML = state.compareList.map(id => {
+        const p = DB.products.find(item => item.id === id);
+        return `
+          <span class="bg-slate-800 border border-slate-600 text-xs px-2.5 py-1 rounded-full flex items-center space-x-1.5">
+            <span>${p.name_en}</span>
+            <button onclick="toggleCompare('${id}')" class="text-slate-400 hover:text-amber-400 font-bold">&times;</button>
+          </span>
+        `;
+      }).join("");
+    }
+
+    function openCompareModal() {
+      if (state.compareList.length < 2) {
+        alert("請至少勾選 2 款同類別器材進行並排對照！");
+        return;
+      }
+      const items = state.compareList.map(id => DB.products.find(p => p.id === id));
+      const cat = items[0].category;
+      const container = document.getElementById("compare-table-container");
+
+      // 定義不同類別要並排比較的客觀欄位
+      let rows = [
+        { label: "品牌", getValue: p => `${getBrand(p.brand_id).name_en} (${getBrand(p.brand_id).name_zh})` },
+        { label: "上市年份", getValue: p => `${p.release_year} 年` },
+        { label: "產地", getValue: p => p.specs.made_in || "未標示" }
+      ];
+
+      if (cat === "blade") {
+        rows.push(
+          { label: "打法定位", getValue: p => p.specs.playstyle },
+          { label: "結構類型", getValue: p => p.specs.composition },
+          { label: "面材 (Surface)", getValue: p => p.specs.wood_layers?.surface || "null" },
+          { label: "纖維層 (Fiber)", getValue: p => p.specs.wood_layers?.fiber || "無 (純木)" },
+          { label: "大芯 (Core)", getValue: p => p.specs.wood_layers?.core || "null" },
+          { label: "板身厚度", getValue: p => `${p.specs.thickness_mm} mm` },
+          { label: "拍面尺寸", getValue: p => `${p.specs.head_size_mm.length} × ${p.specs.head_size_mm.width} mm` },
+          { label: "官方平均重量", getValue: p => `${p.specs.weight_avg_g} g` },
+          { label: "JTTA 認證", getValue: p => p.specs.jtta_approved ? "✔ 已認證" : "無" }
+        );
+      } else if (cat === "rubber") {
+        rows.push(
+          { label: "膠皮類型", getValue: p => p.specs.rubber_type_label },
+          { label: "膠面性質", getValue: p => p.specs.topsheet_label },
+          { label: "海綿結構", getValue: p => p.specs.sponge_type },
+          { label: "原廠硬度標準", getValue: p => `${p.specs.hardness_values} (${p.specs.hardness_scale})` },
+          { label: "換算 Shore-C 參考", getValue: p => p.specs.equivalent_shore_c },
+          { label: "可選厚度 (mm)", getValue: p => p.specs.sponge_thickness_mm.join(" / ") },
+          { label: "裁剪後參考重量", getValue: p => `${p.specs.cut_weight_avg_g} g` },
+          { label: "ITTF 認證編號", getValue: p => p.specs.ittf_approved_code }
+        );
+      }
+
+      const tableHtml = `
+        <table class="w-full text-sm text-left border-collapse">
+          <thead>
+            <tr class="border-b-2 border-slate-200">
+              <th class="py-3 px-4 bg-slate-100 font-bold text-slate-600 w-44">客觀規格參數</th>
+              ${items.map(p => `
+                <th class="py-3 px-4 bg-slate-50 font-bold text-slate-900 min-w-[180px]">
+                  <div class="text-xs text-amber-600 font-semibold">${getBrand(p.brand_id).name_en}</div>
+                  <div class="text-base">${p.name_en}</div>
+                  <div class="text-xs text-slate-500 font-normal">${p.name_zh}</div>
+                </th>
+              `).join("")}
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200">
+            ${rows.map(row => {
+              const vals = items.map(row.getValue);
+              const isDifferent = new Set(vals).size > 1;
+              return `
+                <tr class="${isDifferent ? 'bg-amber-50/70' : ''}">
+                  <td class="py-2.5 px-4 font-medium text-slate-600 bg-slate-50/50">${row.label}</td>
+                  ${vals.map(v => `<td class="py-2.5 px-4 font-semibold text-slate-800">${v}</td>`).join("")}
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      `;
+      container.innerHTML = tableHtml;
+      document.getElementById("compare-modal").classList.remove("hidden");
+    }
+
+    function closeCompareModal() {
+      document.getElementById("compare-modal").classList.add("hidden");
+    }
+
+    // =========================================================================
+    // 輔助工具函式
+    // =========================================================================
+    function categoryName(cat) {
+      const map = {
+        blade: "底板 (Blades)",
+        rubber: "膠皮 (Rubbers)",
+        shoe: "桌球鞋 (Shoes)",
+        apparel: "球衣與服飾 (Apparel)",
+        ball: "桌球用球 (Balls)"
+      };
+      return map[cat] || cat;
+    }
+
+    function renderProductCard(p) {
+      const brand = getBrand(p.brand_id);
+      const isCompared = state.compareList.includes(p.id);
+      let specBadges = "";
+
+      if (p.category === "blade") {
+        specBadges = `
+          <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs font-medium">${p.specs.composition}</span>
+          <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs font-medium">面材: ${p.specs.wood_layers.surface.split(" ")[0]}</span>
+          <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs font-medium">厚 ${p.specs.thickness_mm}mm</span>
+          <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs font-medium">均重 ${p.specs.weight_avg_g}g</span>
+        `;
+      } else if (p.category === "rubber") {
+        specBadges = `
+          <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs font-medium">${p.specs.topsheet_label}</span>
+          <span class="bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded text-xs font-medium">硬度: ${p.specs.hardness_values} (${p.specs.hardness_scale.split(" ")[0]})</span>
+          <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs font-medium">換算 Shore-C: ${p.specs.equivalent_shore_c}</span>
+        `;
+      } else if (p.category === "shoe") {
+        specBadges = `
+          <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs font-medium">楦頭: ${p.specs.width_fit}</span>
+          <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs font-medium">重量: ${p.specs.weight_g}g (${p.specs.weight_ref})</span>
+        `;
+      } else if (p.category === "apparel") {
+        specBadges = `
+          <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded text-xs font-medium">${p.specs.jtta_approved ? "✔ JTTA 認證" : "無 JTTA 標章"}</span>
+          <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs font-medium">版型: ${p.specs.sizing_standard}</span>
+        `;
+      } else if (p.category === "ball") {
+        specBadges = `
+          <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs font-medium">${p.specs.star_rating}</span>
+          <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs font-medium">${p.specs.seam_type}</span>
+          <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs font-medium">產地: ${p.specs.made_in}</span>
+        `;
+      }
+
+      const canCompare = p.category === "blade" || p.category === "rubber";
+
+      return `
+        <div onclick="navigate('product-detail', '${p.id}')" class="bg-white border border-slate-200 hover:border-amber-500 rounded-xl p-5 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-start gap-2">
+              <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-amber-600">${brand.name_en} · ${categoryName(p.category).split(" ")[0]}</span>
+                <h3 class="text-lg font-bold text-slate-900 mt-0.5">${p.name_en}</h3>
+                <p class="text-sm text-slate-500">${p.name_zh} <span class="text-xs text-slate-400">(${p.release_year})</span></p>
+              </div>
+              ${canCompare ? `
+                <button onclick="toggleCompare('${p.id}', event)" class="text-xs px-2.5 py-1 rounded-lg border font-semibold transition ${isCompared ? 'bg-amber-500 border-amber-500 text-slate-950' : 'bg-white border-slate-300 text-slate-600 hover:border-slate-900'}">
+                  ${isCompared ? '✔ 已選對比' : '+ 對比'}
+                </button>
+              ` : ''}
+            </div>
+            <div class="mt-4 flex flex-wrap gap-1.5">
+              ${specBadges}
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-xs text-slate-400">
+            <span>俗稱: ${p.aliases.join(" / ")}</span>
+            <span class="text-slate-700 font-semibold">查看完整規格 →</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // 視圖渲染引擎 (Views)
+    // =========================================================================
+    function renderHome() {
+      const query = state.searchQuery.trim().toLowerCase();
+      const searchResults = query
+        ? DB.products.filter(p =>
+            p.name_en.toLowerCase().includes(query) ||
+            p.name_zh.toLowerCase().includes(query) ||
+            p.aliases.some(a => a.toLowerCase().includes(query)) ||
+            getBrand(p.brand_id).name_en.toLowerCase().includes(query)
+          )
+        : [];
+
+      return `
+        <!-- Hero & 智慧搜尋框 -->
+        <section class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-10 shadow-sm mb-10">
+          <div class="max-w-3xl mx-auto text-center">
+            <span class="inline-block bg-slate-100 text-slate-700 text-xs font-bold px-3 py-1 rounded-full mb-3">純客觀硬規格 · 零主觀吹捧評分</span>
+            <h1 class="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">專業桌球品牌與器材客觀資料庫</h1>
+            <p class="text-slate-500 mt-2 text-sm sm:text-base">支援型號、俗稱別名檢索，提供木層結構剖析與跨品牌海綿硬度標準對照</p>
+            
+            <div class="mt-6 relative">
+              <input
+                type="text"
+                value="${state.searchQuery}"
+                oninput="state.searchQuery = this.value; render();"
+                placeholder="輸入型號或俗稱搜尋（例如：蝴蝶王、VIS、普狂3、D09C、WD9...）"
+                class="w-full px-5 py-3.5 rounded-xl border-2 border-slate-300 focus:border-amber-500 focus:outline-none text-slate-900 text-base shadow-inner"
+              />
+              ${state.searchQuery ? `<button onclick="state.searchQuery=''; render();" class="absolute right-4 top-3.5 text-slate-400 hover:text-slate-700 font-bold">清除</button>` : ''}
+            </div>
+
+            <div class="mt-3 flex flex-wrap justify-center gap-2 text-xs text-slate-500">
+              <span>快速測試關鍵字：</span>
+              ${["蝴蝶王", "狂飆3", "MXP", "內置ALC", "WD9"].map(kw => `
+                <button onclick="state.searchQuery='${kw}'; render();" class="bg-slate-100 hover:bg-amber-100 text-slate-700 px-2.5 py-0.5 rounded transition">#${kw}</button>
+              `).join("")}
+            </div>
+          </div>
+
+          ${query ? `
+            <div class="mt-8 pt-8 border-t border-slate-200">
+              <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">搜尋結果：共找到 ${searchResults.length} 筆符合「${state.searchQuery}」</h2>
+              ${searchResults.length > 0
+                ? `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">${searchResults.map(renderProductCard).join("")}</div>`
+                : `<p class="text-center text-slate-400 py-8">找不到相符的器材型號，請嘗試其他俗稱或從下方分類瀏覽。</p>`
+              }
+            </div>
+          ` : ''}
+        </section>
+
+        <!-- 雙向入口一：依器材類別檢索 -->
+        <section class="mb-10">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-bold text-slate-900">入口一：依器材類別檢索 (By Category)</h2>
+            <span class="text-xs text-slate-500">已整合 Phase 1 主力與 Phase 2 擴充品類</span>
+          </div>
+
+          <!-- Phase 1 主力大卡片 -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+            <div onclick="navigate('category', 'blade')" class="bg-slate-900 text-white hover:bg-slate-800 rounded-2xl p-6 cursor-pointer transition shadow-sm flex justify-between items-center group">
+              <div>
+                <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">Phase 1 核心主力 · ${DB.products.filter(p=>p.category==='blade').length} 款</span>
+                <h3 class="text-2xl font-bold mt-1 group-hover:text-amber-300 transition">底板資料庫 (Blades)</h3>
+                <p class="text-slate-400 text-sm mt-1">依外置/內置纖維、面材木種、板身厚度與重量篩選</p>
+              </div>
+              <span class="text-3xl">🏓</span>
+            </div>
+
+            <div onclick="navigate('category', 'rubber')" class="bg-slate-900 text-white hover:bg-slate-800 rounded-2xl p-6 cursor-pointer transition shadow-sm flex justify-between items-center group">
+              <div>
+                <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">Phase 1 核心主力 · ${DB.products.filter(p=>p.category==='rubber').length} 款</span>
+                <h3 class="text-2xl font-bold mt-1 group-hover:text-amber-300 transition">膠皮資料庫 (Rubbers)</h3>
+                <p class="text-slate-400 text-sm mt-1">支援中系 Shore-A 與日德系 Shore-C 雙軌硬度標準對照</p>
+              </div>
+              <span class="text-3xl">🔴</span>
+            </div>
+          </div>
+
+          <!-- Phase 2 次要品類卡片 -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            ${[
+              { cat: "shoe", icon: "👟", title: "桌球鞋 (Shoes)", desc: "楦頭寬度 (2E/3E)、重量與生膠大底" },
+              { cat: "apparel", icon: "👕", title: "球衣與服飾 (Apparel)", desc: "JTTA 認證標章與亞版/歐版規格" },
+              { cat: "ball", icon: "⚪", title: "桌球用球 (Balls)", desc: "ITTF 三星認證、有縫/無縫 ABS 球" }
+            ].map(item => `
+              <div onclick="navigate('category', '${item.cat}')" class="bg-white border border-slate-200 hover:border-amber-500 rounded-xl p-5 cursor-pointer transition shadow-sm">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-semibold text-slate-400">Phase 2 · ${DB.products.filter(p=>p.category===item.cat).length} 款</span>
+                  <span class="text-xl">${item.icon}</span>
+                </div>
+                <h4 class="text-lg font-bold text-slate-900 mt-1">${item.title}</h4>
+                <p class="text-xs text-slate-500 mt-1">${item.desc}</p>
+              </div>
+            `).join("")}
+          </div>
+        </section>
+
+        <!-- 雙向入口二：依品牌瀏覽 -->
+        <section>
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-bold text-slate-900">入口二：依品牌瀏覽 (By Brand)</h2>
+            <button onclick="navigate('brands')" class="text-sm font-semibold text-amber-600 hover:text-amber-700">查看全部品牌檔案 →</button>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+            ${DB.brands.map(b => {
+              const count = DB.products.filter(p => p.brand_id === b.id).length;
+              return `
+                <div onclick="navigate('brand-detail', '${b.id}')" class="bg-white border border-slate-200 hover:border-amber-500 rounded-xl p-4 text-center cursor-pointer transition shadow-sm">
+                  <div class="text-xs text-slate-400 font-medium">${b.country}</div>
+                  <div class="text-lg font-extrabold text-slate-900 mt-1">${b.name_en}</div>
+                  <div class="text-xs text-slate-500">${b.name_zh}</div>
+                  <div class="mt-3 inline-block bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">收錄 ${count} 款器材</div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </section>
+      `;
+    }
+
+    function renderBrandsList() {
+      return `
+        <div class="mb-6">
+          <button onclick="navigate('home')" class="text-sm text-slate-500 hover:text-slate-900">← 返回首頁</button>
+          <h1 class="text-2xl font-extrabold text-slate-900 mt-2">品牌總覽 (Brands Directory)</h1>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          ${DB.brands.map(b => {
+            const items = DB.products.filter(p => p.brand_id === b.id);
+            return `
+              <div onclick="navigate('brand-detail', '${b.id}')" class="bg-white border border-slate-200 hover:border-amber-500 rounded-2xl p-6 cursor-pointer transition shadow-sm">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <span class="text-xs font-bold text-amber-600 uppercase">${b.country} · 創立於 ${b.founded_year}</span>
+                    <h2 class="text-2xl font-bold text-slate-900 mt-0.5">${b.name_en} (${b.name_zh})</h2>
+                  </div>
+                  <span class="bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full">${items.length} 項商品</span>
+                </div>
+                <p class="text-sm text-slate-600 mt-3">${b.description}</p>
+                <div class="mt-4 flex flex-wrap gap-1.5">
+                  ${b.core_technologies.map(t => `<span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-md font-medium">${t}</span>`).join("")}
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    function renderBrandDetail(brandId) {
+      const brand = getBrand(brandId);
+      const products = DB.products.filter(p => p.brand_id === brandId);
+      const categories = [...new Set(products.map(p => p.category))];
+
+      return `
+        <div class="mb-6">
+          <button onclick="navigate('brands')" class="text-sm text-slate-500 hover:text-slate-900">← 返回品牌列表</button>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm mb-8">
+          <div class="flex flex-wrap justify-between items-start gap-4">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="bg-slate-900 text-white text-xs font-bold px-2.5 py-0.5 rounded">${brand.country}</span>
+                <span class="text-xs text-slate-500">創立年份：${brand.founded_year} | 母公司：${brand.parent_company}</span>
+              </div>
+              <h1 class="text-3xl font-extrabold text-slate-900 mt-2">${brand.name_en} ${brand.name_zh} ${brand.name_jp ? `<span class="text-lg font-normal text-slate-400">(${brand.name_jp})</span>` : ""}</h1>
+              <p class="text-slate-600 mt-2 max-w-3xl text-sm">${brand.description}</p>
+            </div>
+          </div>
+          <div class="mt-5 pt-5 border-t border-slate-100">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">品牌核心專利與材料技術</span>
+            <div class="flex flex-wrap gap-2">
+              ${brand.core_technologies.map(t => `<span class="bg-amber-50 text-amber-800 border border-amber-200 text-xs font-semibold px-3 py-1 rounded-lg">${t}</span>`).join("")}
+            </div>
+          </div>
+        </div>
+
+        ${categories.map(cat => `
+          <div class="mb-8">
+            <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center space-x-2">
+              <span>${categoryName(cat)}</span>
+              <span class="bg-slate-200 text-slate-700 text-xs px-2 py-0.5 rounded-full">${products.filter(p=>p.category===cat).length}</span>
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              ${products.filter(p => p.category === cat).map(renderProductCard).join("")}
+            </div>
+          </div>
+        `).join("")}
+      `;
+    }
+
+    function renderCategory(cat) {
+      let items = DB.products.filter(p => p.category === cat);
+
+      // 套用篩選器
+      if (state.filters.brand !== "all") {
+        items = items.filter(p => p.brand_id === state.filters.brand);
+      }
+      if (cat === "blade" && state.filters.bladeStructure !== "all") {
+        items = items.filter(p => p.specs.structure_type === state.filters.bladeStructure);
+      }
+      if (cat === "rubber" && state.filters.rubberSurface !== "all") {
+        items = items.filter(p => p.specs.topsheet_surface === state.filters.rubberSurface);
+      }
+
+      const availableBrands = [...new Set(DB.products.filter(p => p.category === cat).map(p => p.brand_id))];
+
+      return `
+        <div class="mb-6 flex flex-wrap justify-between items-center gap-4">
+          <div>
+            <button onclick="navigate('home')" class="text-sm text-slate-500 hover:text-slate-900">← 返回首頁</button>
+            <h1 class="text-2xl font-extrabold text-slate-900 mt-1">${categoryName(cat)} 客觀規格檢索</h1>
+          </div>
+          <span class="text-sm text-slate-500">顯示 <strong>${items.length}</strong> 款符合條件之器材</span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <!-- 左側多維度篩選欄 -->
+          <aside class="bg-white border border-slate-200 rounded-xl p-5 h-fit shadow-sm space-y-5">
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">品牌篩選</label>
+              <select onchange="state.filters.brand = this.value; render();" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                <option value="all" ${state.filters.brand === 'all' ? 'selected' : ''}>全部品牌</option>
+                ${availableBrands.map(bId => `<option value="${bId}" ${state.filters.brand === bId ? 'selected' : ''}>${getBrand(bId).name_en} (${getBrand(bId).name_zh})</option>`).join("")}
+              </select>
+            </div>
+
+            ${cat === "blade" ? `
+              <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">纖維與木層結構</label>
+                <div class="space-y-2 text-sm">
+                  ${[
+                    { val: "all", label: "全部結構" },
+                    { val: "outer-fiber", label: "外置纖維 (Outer Fiber)" },
+                    { val: "inner-fiber", label: "內置纖維 (Inner Fiber)" },
+                    { val: "all-wood", label: "純木結構 (All-Wood)" }
+                  ].map(opt => `
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                      <input type="radio" name="bladeStruct" value="${opt.val}" ${state.filters.bladeStructure === opt.val ? 'checked' : ''} onchange="state.filters.bladeStructure = this.value; render();" class="text-amber-500" />
+                      <span>${opt.label}</span>
+                    </label>
+                  `).join("")}
+                </div>
+              </div>
+            ` : ''}
+
+            ${cat === "rubber" ? `
+              <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">膠面物理特性</label>
+                <div class="space-y-2 text-sm">
+                  ${[
+                    { val: "all", label: "全部膠面" },
+                    { val: "tacky", label: "高黏性膠面 (Tacky)" },
+                    { val: "tacky-hybrid", label: "微黏性膠面 (Hybrid)" },
+                    { val: "grippy", label: "純澀性膠面 (Grippy)" }
+                  ].map(opt => `
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                      <input type="radio" name="rubberSurf" value="${opt.val}" ${state.filters.rubberSurface === opt.val ? 'checked' : ''} onchange="state.filters.rubberSurface = this.value; render();" class="text-amber-500" />
+                      <span>${opt.label}</span>
+                    </label>
+                  `).join("")}
+                </div>
+              </div>
+              <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-900">
+                <strong>硬度標準提示：</strong><br/>
+                中系（如 DHS）採用 <b>Shore-A</b>；日德系（如 Tibhar）採用 <b>Shore-C</b>。本庫已為您自動計算換算區間。
+              </div>
+            ` : ''}
+          </aside>
+
+          <!-- 右側結果清單 -->
+          <div class="lg:col-span-3">
+            ${items.length > 0
+              ? `<div class="grid grid-cols-1 md:grid-cols-2 gap-5">${items.map(renderProductCard).join("")}</div>`
+              : `<div class="bg-white border border-slate-200 rounded-xl p-10 text-center text-slate-400">沒有符合目前篩選條件的器材。</div>`
+            }
+          </div>
+        </div>
+      `;
+    }
+
+    function renderProductDetail(productId) {
+      const p = DB.products.find(item => item.id === productId);
+      const brand = getBrand(p.brand_id);
+      const isCompared = state.compareList.includes(p.id);
+      const canCompare = p.category === "blade" || p.category === "rubber";
+
+      // 自動生成底板木層結構視覺剖面圖 (僅針對底板)
+      let bladeDiagramHtml = "";
+      if (p.category === "blade" && p.specs.wood_layers) {
+        const wl = p.specs.wood_layers;
+        const isOuter = p.specs.structure_type === "outer-fiber";
+        const topLayers = isOuter
+          ? [
+              { role: "面材 (Surface)", name: wl.surface, color: "bg-amber-200 border-amber-400 text-amber-950" },
+              { role: "纖維層 (Fiber)", name: wl.fiber, color: "bg-sky-200 border-sky-400 text-sky-950 font-bold" },
+              { role: "力材 (Medial)", name: wl.medial, color: "bg-amber-100 border-amber-300 text-amber-900" }
+            ]
+          : [
+              { role: "面材 (Surface)", name: wl.surface, color: "bg-amber-200 border-amber-400 text-amber-950" },
+              { role: "力材 (Medial)", name: wl.medial, color: "bg-amber-100 border-amber-300 text-amber-900" },
+              { role: "纖維層 (Fiber)", name: wl.fiber, color: "bg-sky-200 border-sky-400 text-sky-950 font-bold" }
+            ];
+
+        bladeDiagramHtml = `
+          <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+            <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-1">木層結構橫切面示意圖 (自動生成)</h3>
+            <p class="text-xs text-slate-500 mb-4">依據 YAML 定義之 ${p.specs.composition} 對稱結構繪製</p>
+            <div class="space-y-1.5 text-xs">
+              ${topLayers.map(l => `
+                <div class="wood-layer ${l.color} border px-3 py-2 rounded flex justify-between items-center">
+                  <span>${l.role}</span>
+                  <span>${l.name}</span>
+                </div>
+              `).join("")}
+              <div class="wood-layer bg-orange-200 border border-orange-400 text-orange-950 font-bold px-3 py-3.5 rounded flex justify-between items-center">
+                <span>大芯 (Core)</span>
+                <span>${wl.core}</span>
+              </div>
+              ${[...topLayers].reverse().map(l => `
+                <div class="wood-layer ${l.color} border px-3 py-2 rounded flex justify-between items-center opacity-85">
+                  <span>${l.role}</span>
+                  <span>${l.name}</span>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      }
+
+      // 動態組裝客觀參數表
+      let specRows = [
+        ["所屬品牌", `<span class="text-amber-600 font-bold cursor-pointer underline" onclick="navigate('brand-detail', '${brand.id}')">${brand.name_en} (${brand.name_zh})</span>`],
+        ["產品系列", p.series],
+        ["上市年份", `${p.release_year} 年`],
+        ["販售狀態", p.status === "active" ? "● 現售中 (Active)" : "○ 已停產 (Discontinued)"],
+        ["製造產地", p.specs.made_in || "null"]
+      ];
+
+      if (p.category === "blade") {
+        specRows.push(
+          ["打法定位", p.specs.playstyle],
+          ["層數與結構", `${p.specs.plies_count} 層 — ${p.specs.composition}`],
+          ["官方公稱厚度", `${p.specs.thickness_mm} mm`],
+          ["拍面尺寸", `${p.specs.head_size_mm.length} × ${p.specs.head_size_mm.width} mm`],
+          ["官方平均重量", `${p.specs.weight_avg_g} g`],
+          ["JTTA 認證", p.specs.jtta_approved ? "✔ 已通過認證" : "無"],
+          ["握柄規格尺寸", p.specs.handle_types.map(h => `<b>${h.code}</b>: 長${h.length_mm} × 厚${h.thickness_mm} × 尾寬${h.width_end_mm}mm`).join("<br/>")]
+        );
+      } else if (p.category === "rubber") {
+        specRows.push(
+          ["膠皮類型", p.specs.rubber_type_label],
+          ["膠面物理特性", p.specs.topsheet_label],
+          ["海綿結構與顏色", `${p.specs.sponge_type} (${p.specs.sponge_colors.join(", ")})`],
+          ["原廠硬度標示", `<b>${p.specs.hardness_values}</b> (${p.specs.hardness_scale})`],
+          ["換算 Shore-C 刻度", `<span class="bg-amber-100 text-amber-900 px-2 py-0.5 rounded font-bold">${p.specs.equivalent_shore_c}</span>`],
+          ["可選海綿厚度", `${p.specs.sponge_thickness_mm.join(" / ")} mm`],
+          ["裁剪後參考重量", `${p.specs.cut_weight_avg_g} g (157×150mm 基準)`],
+          ["ITTF 認證編號", p.specs.ittf_approved_code]
+        );
+      } else if (p.category === "shoe") {
+        specRows.push(
+          ["單腳參考重量", `${p.specs.weight_g} g (${p.specs.weight_ref})`],
+          ["楦頭寬度規格", p.specs.width_fit],
+          ["大底材質", p.specs.outsole_type],
+          ["中底緩震科技", p.specs.cushion_tech],
+          ["販售尺碼區間", p.specs.size_range_cm]
+        );
+      } else if (p.category === "apparel") {
+        specRows.push(
+          ["服飾類別", p.specs.apparel_type],
+          ["JTTA 比賽認證", p.specs.jtta_approved ? "✔ 具備 JTTA 認證標章" : "無"],
+          ["版型系統", p.specs.sizing_standard],
+          ["布料材質", p.specs.material],
+          ["市售顏色", p.specs.available_colors.join(", ")]
+        );
+      } else if (p.category === "ball") {
+        specRows.push(
+          ["星級認證", p.specs.star_rating],
+          ["接縫工藝", p.specs.seam_type],
+          ["球體材質", p.specs.material],
+          ["標準直徑", p.specs.diameter_mm]
+        );
+      }
+
+      return `
+        <div class="mb-6 flex items-center space-x-2 text-sm text-slate-500">
+          <button onclick="navigate('home')" class="hover:text-slate-900">首頁</button>
+          <span>/</span>
+          <button onclick="navigate('category', '${p.category}')" class="hover:text-slate-900">${categoryName(p.category)}</button>
+          <span>/</span>
+          <span class="text-slate-900 font-semibold">${p.name_en}</span>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm mb-6">
+          <div class="flex flex-wrap justify-between items-start gap-4">
+            <div>
+              <span class="text-xs font-bold text-amber-600 uppercase tracking-wider">${brand.name_en} · ${categoryName(p.category)}</span>
+              <h1 class="text-3xl font-extrabold text-slate-900 mt-1">${p.name_en} <span class="text-xl font-normal text-slate-500">(${p.name_zh})</span></h1>
+              <p class="text-xs text-slate-400 mt-1">別名與型號代碼：${p.aliases.join("、")}</p>
+            </div>
+            ${canCompare ? `
+              <button onclick="toggleCompare('${p.id}')" class="px-4 py-2 rounded-xl font-bold text-sm border transition ${isCompared ? 'bg-amber-500 border-amber-500 text-slate-950' : 'bg-slate-900 text-white hover:bg-slate-800'}">
+                ${isCompared ? '✔ 已加入對比清單' : '+ 加入規格對比'}
+              </button>
+            ` : ''}
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="${bladeDiagramHtml ? 'lg:col-span-2' : 'lg:col-span-3'} bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+            <div class="px-6 py-4 bg-slate-900 text-white font-bold text-sm">官方客觀硬規格參數表 (Objective Specifications)</div>
+            <table class="w-full text-sm">
+              <tbody class="divide-y divide-slate-200">
+                ${specRows.map(([k, v]) => `
+                  <tr>
+                    <td class="py-3 px-6 bg-slate-50 font-medium text-slate-600 w-1/3">${k}</td>
+                    <td class="py-3 px-6 text-slate-900 font-medium">${v}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+
+          ${bladeDiagramHtml}
+        </div>
+
+        <div class="mt-6 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">結構與工藝客觀備註 (來自 Markdown 內文)</h3>
+          <p class="text-sm text-slate-700 leading-relaxed">${p.notes}</p>
+        </div>
+      `;
+    }
+
+    function render() {
+      const app = document.getElementById("app");
+      if (state.view === "home") app.innerHTML = renderHome();
+      else if (state.view === "brands") app.innerHTML = renderBrandsList();
+      else if (state.view === "brand-detail") app.innerHTML = renderBrandDetail(state.param);
+      else if (state.view === "category") app.innerHTML = renderCategory(state.param);
+      else if (state.view === "product-detail") app.innerHTML = renderProductDetail(state.param);
+    }
+
+    // 啟動渲染
+    render();
+  </script>
+</body>
+</html>
