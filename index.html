@@ -32,8 +32,8 @@
   <script>
     const DB = { brands: [], products: [] };
     let state = { view: "home", param: null, searchQuery: "" };
+    let isComposing = false; // 追蹤中文輸入法是否正在組字
 
-    // 解析 Markdown 檔案中的 YAML Frontmatter 與內文
     function parseMarkdownFile(rawText) {
       const match = rawText.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
       if (!match) return null;
@@ -42,7 +42,6 @@
       return meta;
     }
 
-    // 初始化：讀取 manifest.json 並批次載入所有 .md 檔
     async function initDatabase() {
       try {
         const res = await fetch('./data/manifest.json');
@@ -63,7 +62,7 @@
         document.getElementById("app").innerHTML = `
           <div class="bg-red-50 border border-red-200 text-red-800 rounded-xl p-6 max-w-2xl mx-auto">
             <h2 class="font-bold text-lg">資料庫載入失敗</h2>
-            <p class="text-sm mt-1">請確認已在 GitHub 建立 <code>data/manifest.json</code> 與對應的 <code>.md</code> 檔案，並透過 GitHub Pages 網址開啟（直接本機雙擊 HTML 會受瀏覽器跨域限制）。</p>
+            <p class="text-sm mt-1">請確認已在 GitHub 建立 <code>data/manifest.json</code> 與對應的 <code>.md</code> 檔案。</p>
             <p class="text-xs mt-2 font-mono text-red-600">${err.message}</p>
           </div>
         `;
@@ -101,6 +100,10 @@
         summary = `${p.specs.composition} · 厚 ${p.specs.thickness_mm}mm · 均重 ${p.specs.weight_avg_g}g`;
       } else if (p.category === "rubber") {
         summary = `硬度 ${p.specs.hardness?.values} (${p.specs.hardness?.scale?.split(" ")[0]}) · 換算 ${p.specs.hardness?.equivalent_shore_c}`;
+      } else if (p.category === "shoe") {
+        summary = `楦頭 ${p.specs.width_fit} · 單腳 ${p.specs.weight_g}g (${p.specs.weight_reference_size_cm}cm)`;
+      } else if (p.category === "ball") {
+        summary = `${p.specs.star_rating}星比賽球 · ${p.specs.material} · ${p.specs.seam_type === 'seamed' ? '有縫' : '無縫'}`;
       } else if (p.category === "table") {
         summary = `桌面厚度 ${p.specs.top_thickness_mm}mm · 淨重 ${p.specs.weight_kg}kg · ${p.specs.ittf_approved ? "ITTF認證" : ""}`;
       } else {
@@ -123,14 +126,37 @@
       `;
     }
 
-    function renderHome() {
+    // 局部更新搜尋結果，避免重繪 input 導致斷鍵
+    function updateSearchResults() {
+      const container = document.getElementById("search-results");
+      if (!container) return;
       const q = state.searchQuery.trim().toLowerCase();
-      const hits = q ? DB.products.filter(p =>
+      if (!q) {
+        container.innerHTML = "";
+        return;
+      }
+      const hits = DB.products.filter(p =>
         p.name_en.toLowerCase().includes(q) ||
         p.name_zh.toLowerCase().includes(q) ||
         (p.aliases || []).some(a => String(a).toLowerCase().includes(q))
-      ) : [];
+      );
+      container.innerHTML = `
+        <div class="mt-8 pt-6 border-t border-slate-200 text-left">
+          <h2 class="text-sm font-bold text-slate-500 mb-4">搜尋結果（共 ${hits.length} 筆）</h2>
+          ${hits.length > 0
+            ? `<div class="grid grid-cols-1 md:grid-cols-3 gap-5">${hits.map(renderProductCard).join("")}</div>`
+            : `<p class="text-sm text-slate-400">找不到符合「${state.searchQuery}」的器材。</p>`
+          }
+        </div>
+      `;
+    }
 
+    function handleSearchInput(el) {
+      state.searchQuery = el.value;
+      if (!isComposing) updateSearchResults();
+    }
+
+    function renderHome() {
       const categories = ["blade", "rubber", "shoe", "apparel", "ball", "accessory", "table"];
 
       return `
@@ -140,19 +166,17 @@
           <p class="text-slate-500 mt-2 text-sm">純客觀硬規格、零主觀體感評分，支援雙向導入檢索與別名搜尋</p>
           <div class="max-w-2xl mx-auto mt-6">
             <input
+              id="search-input"
               type="text"
               value="${state.searchQuery}"
-              oninput="state.searchQuery = this.value; render();"
-              placeholder="輸入型號或俗稱（例如：蝴蝶王、VIS、普狂3、彩虹球桌...）"
+              oncompositionstart="isComposing = true"
+              oncompositionend="isComposing = false; handleSearchInput(this)"
+              oninput="handleSearchInput(this)"
+              placeholder="輸入型號或俗稱（例如：蝴蝶王、龍5、D09C、WD9、三星球...）"
               class="w-full px-5 py-3.5 rounded-xl border-2 border-slate-300 focus:border-amber-500 focus:outline-none text-slate-900"
             />
           </div>
-          ${q ? `
-            <div class="mt-8 pt-6 border-t border-slate-200 text-left">
-              <h2 class="text-sm font-bold text-slate-500 mb-4">搜尋結果（共 ${hits.length} 筆）</h2>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-5">${hits.map(renderProductCard).join("")}</div>
-            </div>
-          ` : ''}
+          <div id="search-results"></div>
         </section>
 
         <section class="mb-10">
@@ -239,7 +263,6 @@
       const p = DB.products.find(item => item.id === productId);
       const brand = getBrand(p.brand_id);
 
-      // 將 specs 物件攤平轉成客觀表格列
       const flattenSpecs = (obj, prefix = "") => {
         let rows = [];
         for (const [k, v] of Object.entries(obj || {})) {
@@ -291,7 +314,10 @@
 
     function render() {
       const app = document.getElementById("app");
-      if (state.view === "home") app.innerHTML = renderHome();
+      if (state.view === "home") {
+        app.innerHTML = renderHome();
+        updateSearchResults();
+      }
       else if (state.view === "brands") app.innerHTML = renderBrands();
       else if (state.view === "brand-detail") app.innerHTML = renderBrandDetail(state.param);
       else if (state.view === "category") app.innerHTML = renderCategory(state.param);
