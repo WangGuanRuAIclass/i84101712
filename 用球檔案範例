@@ -1,0 +1,20 @@
+---
+id: nittaku-3-star-premium-clean
+brand_id: nittaku
+category: ball
+series: Premium
+name_en: Nittaku 3-Star Premium Clean
+name_zh: 尼塔庫日本制三星比賽球
+aliases: ["Nittaku日制三星", "日本三星球"]
+release_year: 2021
+status: active
+
+specs:
+  star_rating: 3               # 3 (比賽三星) | 2 | 1 | training (訓練無星)
+  seam_type: seamed            # seamed (有縫球) | seamless (無縫球)
+  material: "ABS 塑膠"         # ABS | Celluloid (賽璐珞 - 歷史停用規格)
+  diameter_mm: 40.0            # 40+ 標準直徑 (40.00 - 40.60mm)
+  ittf_approved: true          # 三星比賽球必填
+  pack_sizes: [3, 6, 12]       # 市售單盒包裝顆數
+  made_in: Japan
+---
