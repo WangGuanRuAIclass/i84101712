@@ -1,0 +1,21 @@
+---
+id: mizuno-wave-drive-9
+brand_id: mizuno
+category: shoe
+series: Wave Drive
+name_en: Wave Drive 9
+name_zh: Wave Drive 9 桌球鞋
+aliases: ["WD9", "81GA2205"]
+release_year: 2022
+status: active
+
+specs:
+  weight_g: 260                # 單腳參考重量 (g)，未知填 null
+  weight_reference_size_cm: 26.0 # 重量測量基準尺碼
+  width_fit: "2E (Standard)"   # Standard (2E) | Wide (3E) | Extra Wide (4E)
+  upper_material: ["人工皮革 (Synthetic Leather)", "透氣網布 (Mesh)"]
+  outsole_type: "無痕生膠大底 (Non-marking Gum Rubber)"
+  cushion_tech: ["Mizuno Enerzy", "Mizuno Wave"] # 官方搭載中底科技名稱
+  size_range_cm: [22.5, 29.0]  # 販售尺碼範圍 (cm)
+  made_in: Vietnam
+---
