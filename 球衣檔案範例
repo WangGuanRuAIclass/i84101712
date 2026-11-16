@@ -1,0 +1,21 @@
+---
+id: butterfly-game-shirt-2026
+brand_id: butterfly
+category: apparel
+series: Official Match Wear
+name_en: Butterfly Official Match Shirt
+name_zh: 蝴蝶比賽專用運動上衣
+aliases: ["蝴蝶比賽服"]
+release_year: 2026
+status: active
+
+specs:
+  apparel_type: shirt          # shirt(上衣) | shorts(短褲) | skirt(球裙) | tracksuit(外套/套裝) | socks(襪子)
+  gender_cut: unisex           # unisex(男女通用) | men | women | kids
+  jtta_approved: true          # 【關鍵認證】是否具備日本桌協 (JTTA) 比賽認證標章
+  ittf_compliant: true         # 是否符合 ITTF 比賽服裝顏色規範（主色非白色/非球色）
+  sizing_standard: Asian       # Asian (亞版/日版) | European (歐版)
+  material: "100% Polyester (吸濕排汗機能布)"
+  features: ["吸濕速乾", "防靜電", "伸縮彈性布料"]
+  available_colors: ["Navy", "Black", "Red"]
+---
