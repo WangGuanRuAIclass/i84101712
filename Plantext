@@ -1,0 +1,15 @@
+你的-repo/
+├── AGENTS.md                                      # 1. AI 開發與資料庫維護規範（使用前面產出的 v3.0 版）
+├── index.html                                     # 2. 網站主程式（自動讀取 data/ 下的 .md 並渲染畫面）
+└── data/
+    ├── manifest.json                              # 3. 檔案清單索引（告訴網頁要去讀取哪幾個 .md 檔）
+    ├── brands/
+    │   ├── butterfly.md                           # 4. 品牌資料：Butterfly
+    │   └── dhs.md                                 # 5. 品牌資料：DHS 紅雙喜
+    └── products/
+        ├── blades/
+        │   └── butterfly-viscaria.md              # 6. 底板資料：Viscaria
+        ├── rubbers/
+        │   └── dhs-hurricane-3-neo.md             # 7. 膠皮資料：NEO 狂飆3
+        └── tables/
+            └── dhs-rainbow-t1223.md               # 8. 球桌資料：彩虹比賽球桌
