@@ -1,0 +1,11 @@
+{
+  "brands": [
+    "data/brands/butterfly.md",
+    "data/brands/dhs.md"
+  ],
+  "products": [
+    "data/products/blades/butterfly-viscaria.md",
+    "data/products/rubbers/dhs-hurricane-3-neo.md",
+    "data/products/tables/dhs-rainbow-t1223.md"
+  ]
+}
