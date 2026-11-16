@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TT-SPEC | 專業桌球品牌與器材客觀規格庫</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col pb-20">
+
+  <header class="bg-slate-900 text-white sticky top-0 z-30 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="navigate('home')">
+        <span class="bg-amber-500 text-slate-950 font-black px-2.5 py-1 rounded text-sm tracking-wider">TT-SPEC</span>
+        <span class="font-bold text-lg tracking-tight">桌球器材客觀規格庫</span>
+        <span class="hidden md:inline-block text-xs bg-emerald-900/80 text-emerald-300 px-2 py-0.5 rounded border border-emerald-700">Live Markdown DB</span>
+      </div>
+      <nav class="flex items-center space-x-3 sm:space-x-6 text-sm font-medium">
+        <button onclick="navigate('home')" class="hover:text-amber-400 transition">首頁總覽</button>
+        <button onclick="navigate('brands')" class="hover:text-amber-400 transition">依品牌瀏覽</button>
+        <button onclick="navigate('category', 'blade')" class="hover:text-amber-400 transition">底板庫</button>
+        <button onclick="navigate('category', 'rubber')" class="hover:text-amber-400 transition">膠皮庫</button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="app" class="max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 flex-grow">
+    <div class="text-center py-20 text-slate-500">正在從 GitHub 資料庫讀取 Markdown 規格檔案...</div>
+  </main>
+
+  <script>
+    const DB = { brands: [], products: [] };
+    let state = { view: "home", param: null, searchQuery: "" };
+
+    // 解析 Markdown 檔案中的 YAML Frontmatter 與內文
+    function parseMarkdownFile(rawText) {
+      const match = rawText.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+      if (!match) return null;
+      const meta = jsyaml.load(match[1]);
+      meta.body = match[2].trim();
+      return meta;
+    }
+
+    // 初始化：讀取 manifest.json 並批次載入所有 .md 檔
+    async function initDatabase() {
+      try {
+        const res = await fetch('./data/manifest.json');
+        if (!res.ok) throw new Error("找不到 data/manifest.json");
+        const manifest = await res.json();
+
+        const brandDocs = await Promise.all(
+          (manifest.brands || []).map(path => fetch('./' + path).then(r => r.text()).then(parseMarkdownFile))
+        );
+        const productDocs = await Promise.all(
+          (manifest.products || []).map(path => fetch('./' + path).then(r => r.text()).then(parseMarkdownFile))
+        );
+
+        DB.brands = brandDocs.filter(Boolean);
+        DB.products = productDocs.filter(Boolean);
+        render();
+      } catch (err) {
+        document.getElementById("app").innerHTML = `
+          <div class="bg-red-50 border border-red-200 text-red-800 rounded-xl p-6 max-w-2xl mx-auto">
+            <h2 class="font-bold text-lg">資料庫載入失敗</h2>
+            <p class="text-sm mt-1">請確認已在 GitHub 建立 <code>data/manifest.json</code> 與對應的 <code>.md</code> 檔案，並透過 GitHub Pages 網址開啟（直接本機雙擊 HTML 會受瀏覽器跨域限制）。</p>
+            <p class="text-xs mt-2 font-mono text-red-600">${err.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    function getBrand(id) {
+      return DB.brands.find(b => b.id === id) || { name_en: id, name_zh: "" };
+    }
+
+    function categoryLabel(cat) {
+      const map = {
+        blade: "底板 (Blades)",
+        rubber: "膠皮 (Rubbers)",
+        shoe: "桌球鞋 (Shoes)",
+        apparel: "球衣與服飾 (Apparel)",
+        ball: "桌球用球 (Balls)",
+        accessory: "周邊配件與耗材 (Accessories)",
+        table: "專業桌球桌 (Tables)"
+      };
+      return map[cat] || cat;
+    }
+
+    function navigate(view, param = null) {
+      state.view = view;
+      state.param = param;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      render();
+    }
+
+    function renderProductCard(p) {
+      const brand = getBrand(p.brand_id);
+      let summary = "";
+      if (p.category === "blade") {
+        summary = `${p.specs.composition} · 厚 ${p.specs.thickness_mm}mm · 均重 ${p.specs.weight_avg_g}g`;
+      } else if (p.category === "rubber") {
+        summary = `硬度 ${p.specs.hardness?.values} (${p.specs.hardness?.scale?.split(" ")[0]}) · 換算 ${p.specs.hardness?.equivalent_shore_c}`;
+      } else if (p.category === "table") {
+        summary = `桌面厚度 ${p.specs.top_thickness_mm}mm · 淨重 ${p.specs.weight_kg}kg · ${p.specs.ittf_approved ? "ITTF認證" : ""}`;
+      } else {
+        summary = `上市年份：${p.release_year} · 產地：${p.specs?.made_in || "未標示"}`;
+      }
+
+      return `
+        <div onclick="navigate('product-detail', '${p.id}')" class="bg-white border border-slate-200 hover:border-amber-500 rounded-xl p-5 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-amber-600">${brand.name_en} · ${categoryLabel(p.category).split(" ")[0]}</span>
+            <h3 class="text-lg font-bold text-slate-900 mt-0.5">${p.name_en}</h3>
+            <p class="text-sm text-slate-500">${p.name_zh}</p>
+            <div class="mt-3 bg-slate-100 text-slate-700 text-xs px-2.5 py-1.5 rounded font-medium">${summary}</div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-xs text-slate-400">
+            <span>別名: ${(p.aliases || []).join(" / ") || "無"}</span>
+            <span class="text-slate-700 font-semibold">檢視硬規格 →</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderHome() {
+      const q = state.searchQuery.trim().toLowerCase();
+      const hits = q ? DB.products.filter(p =>
+        p.name_en.toLowerCase().includes(q) ||
+        p.name_zh.toLowerCase().includes(q) ||
+        (p.aliases || []).some(a => String(a).toLowerCase().includes(q))
+      ) : [];
+
+      const categories = ["blade", "rubber", "shoe", "apparel", "ball", "accessory", "table"];
+
+      return `
+        <section class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-10 shadow-sm mb-10 text-center">
+          <span class="inline-block bg-slate-100 text-slate-700 text-xs font-bold px-3 py-1 rounded-full mb-3">Schema v3.0 · 即時解析 GitHub Markdown 資料庫</span>
+          <h1 class="text-2xl sm:text-4xl font-extrabold text-slate-900">專業桌球品牌與器材客觀規格庫</h1>
+          <p class="text-slate-500 mt-2 text-sm">純客觀硬規格、零主觀體感評分，支援雙向導入檢索與別名搜尋</p>
+          <div class="max-w-2xl mx-auto mt-6">
+            <input
+              type="text"
+              value="${state.searchQuery}"
+              oninput="state.searchQuery = this.value; render();"
+              placeholder="輸入型號或俗稱（例如：蝴蝶王、VIS、普狂3、彩虹球桌...）"
+              class="w-full px-5 py-3.5 rounded-xl border-2 border-slate-300 focus:border-amber-500 focus:outline-none text-slate-900"
+            />
+          </div>
+          ${q ? `
+            <div class="mt-8 pt-6 border-t border-slate-200 text-left">
+              <h2 class="text-sm font-bold text-slate-500 mb-4">搜尋結果（共 ${hits.length} 筆）</h2>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-5">${hits.map(renderProductCard).join("")}</div>
+            </div>
+          ` : ''}
+        </section>
+
+        <section class="mb-10">
+          <h2 class="text-xl font-bold text-slate-900 mb-4">入口一：依器材類別檢索 (7 大全品類)</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            ${categories.map(cat => {
+              const count = DB.products.filter(p => p.category === cat).length;
+              return `
+                <div onclick="navigate('category', '${cat}')" class="bg-white border border-slate-200 hover:border-amber-500 rounded-xl p-5 cursor-pointer transition shadow-sm">
+                  <div class="text-xs font-bold text-amber-600">已收錄 ${count} 款</div>
+                  <div class="text-lg font-bold text-slate-900 mt-1">${categoryLabel(cat)}</div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </section>
+
+        <section>
+          <h2 class="text-xl font-bold text-slate-900 mb-4">入口二：依品牌瀏覽 (By Brand)</h2>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            ${DB.brands.map(b => {
+              const count = DB.products.filter(p => p.brand_id === b.id).length;
+              return `
+                <div onclick="navigate('brand-detail', '${b.id}')" class="bg-white border border-slate-200 hover:border-amber-500 rounded-xl p-5 text-center cursor-pointer transition shadow-sm">
+                  <div class="text-xs text-slate-400">${b.country}</div>
+                  <div class="text-xl font-extrabold text-slate-900 mt-1">${b.name_en}</div>
+                  <div class="text-xs text-slate-500">${b.name_zh}</div>
+                  <div class="mt-3 inline-block bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">${count} 款器材</div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </section>
+      `;
+    }
+
+    function renderBrands() {
+      return `
+        <button onclick="navigate('home')" class="text-sm text-slate-500 hover:text-slate-900 mb-4">← 返回首頁</button>
+        <h1 class="text-2xl font-extrabold text-slate-900 mb-6">品牌總覽</h1>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          ${DB.brands.map(b => `
+            <div onclick="navigate('brand-detail', '${b.id}')" class="bg-white border border-slate-200 hover:border-amber-500 rounded-2xl p-6 cursor-pointer shadow-sm">
+              <div class="text-xs font-bold text-amber-600">${b.country} · 創立於 ${b.founded_year}</div>
+              <h2 class="text-2xl font-bold text-slate-900 mt-1">${b.name_en} (${b.name_zh})</h2>
+              <p class="text-sm text-slate-600 mt-2">${b.body}</p>
+              <div class="mt-4 flex flex-wrap gap-1.5">
+                ${(b.core_technologies || []).map(t => `<span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded">${t}</span>`).join("")}
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function renderBrandDetail(brandId) {
+      const b = getBrand(brandId);
+      const items = DB.products.filter(p => p.brand_id === brandId);
+      return `
+        <button onclick="navigate('brands')" class="text-sm text-slate-500 hover:text-slate-900 mb-4">← 返回品牌列表</button>
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 mb-8 shadow-sm">
+          <span class="bg-slate-900 text-white text-xs font-bold px-2.5 py-0.5 rounded">${b.country}</span>
+          <h1 class="text-3xl font-extrabold text-slate-900 mt-2">${b.name_en} (${b.name_zh})</h1>
+          <p class="text-sm text-slate-600 mt-2">${b.body || ""}</p>
+        </div>
+        <h2 class="text-lg font-bold text-slate-900 mb-4">旗下收錄器材 (${items.length})</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">${items.map(renderProductCard).join("")}</div>
+      `;
+    }
+
+    function renderCategory(cat) {
+      const items = DB.products.filter(p => p.category === cat);
+      return `
+        <button onclick="navigate('home')" class="text-sm text-slate-500 hover:text-slate-900 mb-4">← 返回首頁</button>
+        <h1 class="text-2xl font-extrabold text-slate-900 mb-6">${categoryLabel(cat)} (${items.length})</h1>
+        ${items.length > 0
+          ? `<div class="grid grid-cols-1 md:grid-cols-3 gap-5">${items.map(renderProductCard).join("")}</div>`
+          : `<div class="bg-white border border-slate-200 rounded-xl p-10 text-center text-slate-400">此類別目前尚未新增 Markdown 資料檔，請依照 AGENTS.md 規範新增至 <code>data/products/</code> 並更新 <code>manifest.json</code>。</div>`
+        }
+      `;
+    }
+
+    function renderProductDetail(productId) {
+      const p = DB.products.find(item => item.id === productId);
+      const brand = getBrand(p.brand_id);
+
+      // 將 specs 物件攤平轉成客觀表格列
+      const flattenSpecs = (obj, prefix = "") => {
+        let rows = [];
+        for (const [k, v] of Object.entries(obj || {})) {
+          if (v !== null && typeof v === "object" && !Array.isArray(v)) {
+            rows = rows.concat(flattenSpecs(v, `${prefix}${k}.`));
+          } else {
+            rows.push([`${prefix}${k}`, Array.isArray(v) ? v.join(", ") : (v === null ? "null (未提供)" : String(v))]);
+          }
+        }
+        return rows;
+      };
+
+      const specRows = [
+        ["品牌 (brand_id)", `${brand.name_en} (${brand.name_zh})`],
+        ["系列 (series)", p.series],
+        ["上市年份 (release_year)", p.release_year],
+        ["狀態 (status)", p.status],
+        ...flattenSpecs(p.specs)
+      ];
+
+      return `
+        <button onclick="navigate('category', '${p.category}')" class="text-sm text-slate-500 hover:text-slate-900 mb-4">← 返回 ${categoryLabel(p.category)}</button>
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 mb-6 shadow-sm">
+          <span class="text-xs font-bold text-amber-600 uppercase">${brand.name_en} · ${categoryLabel(p.category)}</span>
+          <h1 class="text-3xl font-extrabold text-slate-900 mt-1">${p.name_en} (${p.name_zh})</h1>
+          <p class="text-xs text-slate-400 mt-1">別名索引：${(p.aliases || []).join("、") || "無"}</p>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm mb-6">
+          <div class="px-6 py-3.5 bg-slate-900 text-white font-bold text-sm">YAML 客觀規格數據表 (直接解析自 .md 檔案)</div>
+          <table class="w-full text-sm">
+            <tbody class="divide-y divide-slate-200">
+              ${specRows.map(([k, v]) => `
+                <tr>
+                  <td class="py-2.5 px-6 bg-slate-50 font-mono text-xs text-slate-600 w-1/3">${k}</td>
+                  <td class="py-2.5 px-6 text-slate-900 font-medium">${v}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <h3 class="text-sm font-bold text-slate-900 mb-2">客觀結構與工藝備註</h3>
+          <p class="text-sm text-slate-700 leading-relaxed">${p.body || "無備註"}</p>
+        </div>
+      `;
+    }
+
+    function render() {
+      const app = document.getElementById("app");
+      if (state.view === "home") app.innerHTML = renderHome();
+      else if (state.view === "brands") app.innerHTML = renderBrands();
+      else if (state.view === "brand-detail") app.innerHTML = renderBrandDetail(state.param);
+      else if (state.view === "category") app.innerHTML = renderCategory(state.param);
+      else if (state.view === "product-detail") app.innerHTML = renderProductDetail(state.param);
+    }
+
+    initDatabase();
+  </script>
+</body>
+</html>
