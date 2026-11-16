@@ -1,0 +1,32 @@
+---
+id: butterfly-viscaria
+brand_id: butterfly
+category: blade
+series: Viscaria
+name_en: Viscaria
+name_zh: 維斯卡利亞
+aliases:
+  - 蝴蝶王
+  - VIS
+  - 30041
+release_year: 1993
+status: active
+specs:
+  playstyle: OFF
+  structure_type: outer-fiber
+  plies_count: 7
+  composition: 5木 + 2 ALC (外置)
+  wood_layers:
+    surface: Koto (寇頭)
+    fiber: Arylate-Carbon (芳碳纖維)
+    medial: Limba (林巴)
+    core: Kiri (桐木)
+  thickness_mm: 5.8
+  head_size_mm:
+    length: 157
+    width: 150
+  weight_avg_g: 87
+  made_in: Japan
+  jtta_approved: true
+---
+表層採用硬脆的 Koto 面材，緊貼 Arylate-Carbon 纖維層，大芯為輕質桐木。為後續 Timo Boll ALC、張繼科 ALC 的結構原型。
