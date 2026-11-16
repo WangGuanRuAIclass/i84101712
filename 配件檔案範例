@@ -1,0 +1,31 @@
+---
+id: butterfly-free-chack-2
+brand_id: butterfly
+category: accessory
+series: Free Chack
+name_en: Free Chack II
+name_zh: 蝴蝶第二代無機膠水
+aliases: ["Free Chack 2", "蝴蝶無機膠水"]
+release_year: 2014
+status: active
+
+specs:
+  accessory_type: glue         # glue(膠水) | booster(膨脹油) | edge-tape(護邊條) | case(拍套/拍盒) | cleaner(清潔劑) | grip-tape(吸汗帶)
+  
+  # === 依子類型填寫對應客觀規格（不適用該品項者填 null） ===
+  # [膠水 / 清潔劑 / 膨脹油適用]
+  volume_ml: [20, 90, 500]     # 市售容量規格 (ml)
+  voc_free: true               # 【關鍵合規指標】是否不含揮發性有機溶劑 (ITTF 規定)
+  chemical_base: "天然乳膠水性基底"
+  
+  # [護邊條 / 吸汗帶適用]
+  width_mm: null               # 寬度規格 (如 6, 8, 10, 12 mm)
+  length_cm: null              # 長度規格 (如 50 cm 單拍裝 / 1000 cm 大捲裝)
+  material: null               # 材質（如 泡棉防撞 / 織布）
+  
+  # [拍套 / 硬殼拍盒適用]
+  capacity_rackets: null       # 可容納球拍支數（如 1 / 2）
+  shell_type: null             # soft(軟包) | hard-shell(硬殼防壓)
+  
+  made_in: Japan
+---
