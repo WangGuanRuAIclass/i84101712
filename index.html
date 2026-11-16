@@ -268,8 +268,22 @@
         for (const [k, v] of Object.entries(obj || {})) {
           if (v !== null && typeof v === "object" && !Array.isArray(v)) {
             rows = rows.concat(flattenSpecs(v, `${prefix}${k}.`));
+          } else if (Array.isArray(v)) {
+            const hasObjects = v.some(item => item !== null && typeof item === "object");
+            const formattedArray = v.map(item => {
+              if (item !== null && typeof item === "object") {
+                if (item.code) {
+                  return `<span class="inline-block bg-slate-100 border border-slate-300 rounded px-2 py-0.5 mr-1.5 mb-1 text-xs">
+                    <strong>${item.code}</strong>：長 ${item.length_mm ?? '?'} × 厚 ${item.thickness_mm ?? '?'} × 尾寬 ${item.width_end_mm ?? '?'} mm
+                  </span>`;
+                }
+                return Object.entries(item).map(([ik, iv]) => `${ik}: ${iv}`).join(", ");
+              }
+              return String(item);
+            }).join(hasObjects ? "" : ", ");
+            rows.push([`${prefix}${k}`, formattedArray || "無"]);
           } else {
-            rows.push([`${prefix}${k}`, Array.isArray(v) ? v.join(", ") : (v === null ? "null (未提供)" : String(v))]);
+            rows.push([`${prefix}${k}`, v === null ? "null (未提供)" : String(v)]);
           }
         }
         return rows;
