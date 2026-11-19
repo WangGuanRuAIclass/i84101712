@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0F172A">
+  <title>排球入門｜Volleyball 101</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0F172A;
+      --panel: #172338;
+      --panel-2: #1E293B;
+      --text: #F8FAFC;
+      --muted: #B7C4D8;
+      --orange: #F97316;
+      --cyan: #38BDF8;
+      --line: rgba(248,250,252,.14);
+    }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body {
+      background: radial-gradient(ellipse at 18% 12%, #243754 0, var(--bg) 48%, #080D18 100%);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans TC", sans-serif;
+    }
+    .deck { width: 100vw; height: 100dvh; display: grid; place-items: center; padding: 3.2vh 3vw 8vh; }
+    .slide {
+      display: none; position: relative; width: min(94vw, 150vh); aspect-ratio: 16 / 9;
+      max-height: 84vh; overflow: hidden; padding: clamp(24px, 5vw, 76px);
+      border: 1px solid var(--line); border-radius: 24px;
+      background: linear-gradient(145deg, rgba(30,41,59,.97), rgba(15,23,42,.98));
+      box-shadow: 0 28px 90px rgba(0,0,0,.4);
+    }
+    .slide.active { display: flex; flex-direction: column; justify-content: center; gap: clamp(14px, 2.4vh, 28px); animation: appear .28s ease-out; }
+    @keyframes appear { from { opacity: .35; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .eyebrow { margin: 0; color: var(--orange); font-size: clamp(12px, 1.2vw, 17px); font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+    h1, h2, p { margin: 0; }
+    h1 { max-width: 900px; font-size: clamp(42px, 7.6vw, 104px); line-height: 1.03; letter-spacing: -.045em; }
+    h2 { font-size: clamp(28px, 4vw, 56px); line-height: 1.12; letter-spacing: -.025em; }
+    .subtitle { color: var(--muted); font-size: clamp(17px, 2vw, 27px); line-height: 1.5; }
+    .accent { color: var(--orange); }
+    .big-number { color: var(--orange); font-size: clamp(68px, 12vw, 160px); font-weight: 900; line-height: .9; letter-spacing: -.06em; }
+    .basics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 6px; }
+    .fact { min-height: 92px; padding: clamp(14px, 2vw, 24px); border-radius: 16px; background: var(--panel-2); border: 1px solid var(--line); }
+    .fact strong { display: block; color: var(--cyan); font-size: clamp(17px, 2vw, 26px); margin-bottom: 5px; }
+    .fact span { color: var(--muted); font-size: clamp(14px, 1.45vw, 19px); line-height: 1.4; }
+    .visual-slide { gap: 10px !important; }
+    .visual-slide h2 { flex: 0 0 auto; }
+    .visual { display: block; width: 100%; max-height: 48vh; min-height: 0; flex: 1 1 auto; }
+    .caption { color: var(--muted); font-size: clamp(13px, 1.35vw, 18px); text-align: center; }
+    .score-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: clamp(10px, 3vw, 36px); align-items: center; }
+    .score-card { background: var(--panel-2); border: 1px solid var(--line); border-radius: 18px; padding: clamp(16px, 2.6vw, 32px); }
+    .score-card strong { display: block; font-size: clamp(34px, 6vw, 78px); line-height: 1; color: var(--orange); }
+    .score-card span { display: block; color: var(--muted); font-size: clamp(14px, 1.5vw, 20px); margin-top: 9px; }
+    .versus { color: var(--muted); font-weight: 800; }
+    .rule-strip { padding: 14px 18px; border-left: 4px solid var(--orange); background: rgba(249,115,22,.1); border-radius: 0 12px 12px 0; color: var(--text); font-size: clamp(15px, 1.7vw, 22px); }
+    .fault-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .fault { padding: clamp(14px, 1.8vw, 22px); border-radius: 14px; background: var(--panel-2); border-top: 3px solid var(--orange); }
+    .fault b { display: block; font-size: clamp(17px, 1.8vw, 24px); margin-bottom: 5px; }
+    .fault span { color: var(--muted); font-size: clamp(13px, 1.35vw, 18px); line-height: 1.4; }
+    .takeaway { padding: clamp(18px, 3vw, 38px); border: 1px solid rgba(249,115,22,.4); background: rgba(249,115,22,.1); border-radius: 18px; font-size: clamp(23px, 3.2vw, 43px); font-weight: 750; line-height: 1.35; }
+    .controls { position: fixed; z-index: 5; right: 3vw; bottom: 2.2vh; display: flex; align-items: center; gap: 10px; }
+    .controls button { border: 1px solid var(--line); border-radius: 999px; padding: 10px 16px; color: var(--text); background: #1E293B; font: inherit; font-size: 14px; cursor: pointer; }
+    .controls button:hover:not(:disabled), .controls button:focus-visible { background: var(--orange); color: #111827; outline: none; }
+    .controls button:disabled { opacity: .4; cursor: default; }
+    #page-count { min-width: 52px; text-align: center; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .progress { position: fixed; z-index: 6; left: 0; top: 0; height: 4px; width: 100%; background: rgba(255,255,255,.08); }
+    .progress span { display: block; width: 14.285%; height: 100%; background: var(--orange); transition: width .25s ease; }
+    .hint { position: absolute; left: clamp(24px, 5vw, 76px); bottom: clamp(20px, 3vh, 34px); color: #8291A8; font-size: 13px; }
+    @media (max-width: 650px) {
+      .deck { padding: 2vh 2vw 10vh; }
+      .slide { width: 96vw; max-height: 83vh; padding: 22px; border-radius: 18px; }
+      .basics-grid, .fault-grid { gap: 8px; }
+      .fact { min-height: 76px; }
+      .visual { max-height: 43vh; }
+      .controls { right: 2vw; bottom: 1.2vh; gap: 6px; }
+      .controls button { padding: 9px 12px; }
+      .hint { display: none; }
+    }
+    @media (max-aspect-ratio: 4/3) {
+      .slide { width: 96vw; }
+      .visual { max-height: 40vh; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <div class="progress" aria-hidden="true"><span id="progress-bar"></span></div>
+  <main class="deck" aria-live="polite">
+    <section class="slide active" aria-label="第 1 張：封面">
+      <p class="eyebrow">VOLLEYBALL 101 · 排球入門</p>
+      <h1>隔網一擊，<br><span class="accent">全隊得分。</span></h1>
+      <p class="subtitle">用 7 張投影片，快速看懂排球場、計分、輪轉與常見判決。</p>
+      <p class="hint">使用 ← → 或空白鍵開始</p>
+    </section>
+
+    <section class="slide" aria-label="第 2 張：基礎設定">
+      <p class="eyebrow">01 / THE BASICS</p>
+      <h2>六人一隊，<span class="accent">三次內回球</span></h2>
+      <div class="basics-grid">
+        <div class="fact"><strong>6 人上場</strong><span>每隊場上始終維持六名球員。</span></div>
+        <div class="fact"><strong>最多 3 次</strong><span>接球、傳球、攻擊，把球送回對區。</span></div>
+        <div class="fact"><strong>身體都能碰</strong><span>要清楚擊球，不能持球或拋球。</span></div>
+        <div class="fact"><strong>自由球員</strong><span>穿不同球衣，主要負責後排防守。</span></div>
+      </div>
+    </section>
+
+    <section class="slide visual-slide" aria-label="第 3 張：場地圖解">
+      <p class="eyebrow">02 / THE COURT</p>
+      <h2>場地一分為二，<span class="accent">攻擊線平行球網</span></h2>
+      <svg class="visual" viewBox="0 0 760 330" role="img" aria-labelledby="court-title court-desc">
+        <title id="court-title">排球場地平面圖</title>
+        <desc id="court-desc">18 公尺乘 9 公尺場地分成兩半，球網與兩側攻擊線均為垂直方向且互相平行。</desc>
+        <rect x="90" y="28" width="580" height="250" rx="8" fill="#DBEAFE" stroke="#F8FAFC" stroke-width="3"/>
+        <line x1="380" y1="28" x2="380" y2="278" stroke="#F8FAFC" stroke-width="9"/>
+        <line x1="380" y1="28" x2="380" y2="278" stroke="#0F172A" stroke-width="2" stroke-dasharray="8 7"/>
+        <line x1="235" y1="28" x2="235" y2="278" stroke="#F97316" stroke-width="5"/>
+        <line x1="525" y1="28" x2="525" y2="278" stroke="#F97316" stroke-width="5"/>
+        <text x="162" y="155" text-anchor="middle" fill="#0F172A" font-size="20" font-weight="700">己方後區</text>
+        <text x="307" y="155" text-anchor="middle" fill="#0F172A" font-size="20" font-weight="700">己方前區</text>
+        <text x="452" y="155" text-anchor="middle" fill="#0F172A" font-size="20" font-weight="700">對方前區</text>
+        <text x="597" y="155" text-anchor="middle" fill="#0F172A" font-size="20" font-weight="700">對方後區</text>
+        <text x="380" y="18" text-anchor="middle" fill="#F8FAFC" font-size="17" font-weight="700">球網／中線</text>
+        <text x="380" y="313" text-anchor="middle" fill="#F8FAFC" font-size="17">場地 18 m × 9 m　·　橙線＝攻擊線</text>
+      </svg>
+      <p class="caption">球網將 18 × 9 公尺球場分成兩邊；攻擊線與球網平行，界定前、後區。</p>
+    </section>
+
+    <section class="slide" aria-label="第 4 張：計分方式">
+      <p class="eyebrow">03 / SCORING</p>
+      <h2>每一球都算分，<span class="accent">先贏三局</span></h2>
+      <div class="score-row">
+        <div class="score-card"><strong>25</strong><span>第 1—4 局<br>至少領先 2 分</span></div>
+        <div class="versus">或</div>
+        <div class="score-card"><strong>15</strong><span>第 5 局決勝<br>至少領先 2 分</span></div>
+      </div>
+      <div class="rule-strip">先贏 3 局的球隊獲勝；24：24 後要繼續比到領先 2 分。</div>
+      <p class="subtitle">接發球隊贏球：得 1 分，並取得發球權。</p>
+    </section>
+
+    <section class="slide visual-slide" aria-label="第 5 張：發球與輪轉">
+      <p class="eyebrow">04 / SERVE & ROTATION</p>
+      <h2>拿回發球權，<span class="accent">全隊順時針輪轉</span></h2>
+      <svg class="visual" viewBox="0 0 760 330" role="img" aria-labelledby="rotation-title rotation-desc">
+        <title id="rotation-title">排球六個位置與順時針輪轉</title>
+        <desc id="rotation-desc">己方場地前排位置為 4、3、2，後排位置為 5、6、1；輪轉方向為 2 到 1 到 6 到 5 到 4 到 3 再回到 2。</desc>
+        <rect x="120" y="22" width="520" height="270" rx="8" fill="#DBEAFE" stroke="#F8FAFC" stroke-width="3"/>
+        <line x1="380" y1="22" x2="380" y2="292" stroke="#0F172A" stroke-width="8"/>
+        <line x1="380" y1="22" x2="380" y2="292" stroke="#F8FAFC" stroke-width="2" stroke-dasharray="8 7"/>
+        <line x1="250" y1="22" x2="250" y2="292" stroke="#F97316" stroke-width="4"/>
+        <line x1="510" y1="22" x2="510" y2="292" stroke="#F97316" stroke-width="4"/>
+        <text x="505" y="17" fill="#F8FAFC" font-size="15" font-weight="700">球網</text>
+        <g fill="#172338" stroke="#0F172A" stroke-width="2" font-size="22" font-weight="800" text-anchor="middle">
+          <circle cx="300" cy="78" r="24"/><text x="300" y="86" fill="#F8FAFC" stroke="none">4</text>
+          <circle cx="300" cy="157" r="24"/><text x="300" y="165" fill="#F8FAFC" stroke="none">3</text>
+          <circle cx="300" cy="236" r="24"/><text x="300" y="244" fill="#F8FAFC" stroke="none">2</text>
+          <circle cx="185" cy="78" r="24"/><text x="185" y="86" fill="#F8FAFC" stroke="none">5</text>
+          <circle cx="185" cy="157" r="24"/><text x="185" y="165" fill="#F8FAFC" stroke="none">6</text>
+          <circle cx="185" cy="236" r="24"/><text x="185" y="244" fill="#F8FAFC" stroke="none">1</text>
+        </g>
+        <g fill="none" stroke="#F97316" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow)">
+          <defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#F97316"/></marker></defs>
+          <path d="M324 236 C360 236 360 236 209 236"/>
+          <path d="M185 212 C185 190 185 190 185 181"/>
+          <path d="M185 133 C185 110 185 110 185 102"/>
+          <path d="M209 78 C240 78 260 78 276 78"/>
+          <path d="M300 102 C300 123 300 123 300 133"/>
+          <path d="M300 181 C300 205 300 205 300 212"/>
+        </g>
+        <text x="515" y="120" fill="#0F172A" font-size="20" font-weight="800">前排</text>
+        <text x="515" y="150" fill="#0F172A" font-size="17">4 · 3 · 2</text>
+        <text x="515" y="192" fill="#0F172A" font-size="20" font-weight="800">後排</text>
+        <text x="515" y="222" fill="#0F172A" font-size="17">5 · 6 · 1</text>
+        <text x="380" y="319" text-anchor="middle" fill="#F8FAFC" font-size="16">得發球權後：2 → 1 → 6 → 5 → 4 → 3 → 2</text>
+      </svg>
+      <p class="caption">取得發球權時輪轉一格；1 號位球員在右後方發球。</p>
+    </section>
+
+    <section class="slide" aria-label="第 6 張：常見違例與犯規">
+      <p class="eyebrow">05 / FOULS</p>
+      <h2>球要「打出去」，<span class="accent">別把它留住</span></h2>
+      <div class="fault-grid">
+        <div class="fault"><b>四擊</b><span>全隊回球前觸球超過三次。</span></div>
+        <div class="fault"><b>持球／連擊</b><span>抓、拋球，或同一球員連續擊球。</span></div>
+        <div class="fault"><b>出界</b><span>球落在線外，對方得分並取得發球權。</span></div>
+        <div class="fault"><b>位置／輪轉錯誤</b><span>發球瞬間站位或輪轉順序不對。</span></div>
+      </div>
+      <div class="rule-strip">犯規通常代表失去這一球：對方得 1 分，並可能取得發球權。</div>
+    </section>
+
+    <section class="slide" aria-label="第 7 張：觀賽冷知識">
+      <p class="eyebrow">06 / WATCH SMARTER</p>
+      <h2>觀賽時，記得這三件事</h2>
+      <div class="takeaway"><span class="accent">攔網觸球不算一般三次擊球之一。</span><br>碰網不一定犯規；重點是有沒有妨礙比賽。</div>
+      <p class="subtitle">決勝第 5 局，某隊先得 8 分時就要交換場地。</p>
+    </section>
+  </main>
+
+  <nav class="controls" aria-label="投影片控制">
+    <button id="prev" type="button" aria-label="上一頁">← 上一頁</button>
+    <span id="page-count" aria-live="polite">1 / 7</span>
+    <button id="next" type="button" aria-label="下一頁">下一頁 →</button>
+  </nav>
+  <script>
+    (() => {
+      const slides = Array.from(document.querySelectorAll('.slide'));
+      const previous = document.getElementById('prev');
+      const next = document.getElementById('next');
+      const count = document.getElementById('page-count');
+      const progress = document.getElementById('progress-bar');
+      let current = 0;
+      function show(index) {
+        current = Math.max(0, Math.min(slides.length - 1, index));
+        slides.forEach((slide, i) => {
+          slide.classList.toggle('active', i === current);
+          slide.setAttribute('aria-hidden', i === current ? 'false' : 'true');
+        });
+        count.textContent = `${current + 1} / ${slides.length}`;
+        previous.disabled = current === 0;
+        next.disabled = current === slides.length - 1;
+        progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+        document.title = `${current + 1}/${slides.length}｜排球入門`;
+      }
+      previous.addEventListener('click', () => show(current - 1));
+      next.addEventListener('click', () => show(current + 1));
+      document.addEventListener('keydown', (event) => {
+        if (event.altKey || event.ctrlKey || event.metaKey) return;
+        if (event.key === 'ArrowRight' || event.key === ' ' || event.key === 'PageDown') {
+          event.preventDefault(); show(current + 1);
+        } else if (event.key === 'ArrowLeft' || event.key === 'PageUp') {
+          event.preventDefault(); show(current - 1);
+        } else if (event.key === 'Home') show(0);
+        else if (event.key === 'End') show(slides.length - 1);
+      });
+      show(0);
+    })();
+  </script>
+</body>
+</html>
