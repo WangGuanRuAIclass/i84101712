@@ -1,0 +1,43 @@
+階段一：單一運動項目建檔與生成簡報（每新增 1 種球類走一次）
+Step 1：蒐集原始規則並存入 raw_sources/
+動作：找尋該運動的入門規則或官方規章，轉成純文字（.txt 或 .md），上傳或建立到 raw_sources/<運動英文名>_intro.txt（例如 raw_sources/basketball_intro.txt）。
+
+原則：這個資料夾裡的檔案未來絕對不修改，作為原始資料備份。
+
+Step 2：執行 Workflow A（Ingest） 編譯知識庫頁面
+動作：打開 GitHub Copilot Chat（若在網頁版側邊欄，記得先確認它有讀取到 AGENTS.md），貼上以下指令：
+請閱讀 AGENTS.md，並幫我執行 Workflow A（Ingest），處理 raw_sources/XXXXXXX_intro.txt。
+請依照 AGENTS.md 第 4 節的完整模板（包含第 1 到 5 節及內嵌 SVG 場地示意圖），產出 wiki/sports/XXXXXXX.md，並同步提供要更新進 index.md 與 log.md 的文字片段。
+
+Step 3：驗收並儲存 Wiki 與導航檔案
+動作：快速檢查 Copilot 產出的內容（確認 1～5 節都有寫完整、SVG 球場標線方向沒有畫反）。
+
+存檔：
+
+在 wiki/sports/ 建立 XXXXXXX.md 並貼入主內容。
+
+將目錄片段更新至根目錄的 index.md。
+
+將日誌片段追加至根目錄的 log.md 最末端。
+
+Step 4：執行 Workflow B（Compile Slides） 生成單檔 HTML 簡報
+動作：對 GitHub Copilot Chat 貼上以下萬用指令：
+請幫我執行 AGENTS.md 中的 Workflow B（Compile Slides），讀取 wiki/sports/XXXXXXX.md 的內容，編譯成一份給入門大眾與學生看的單檔 HTML 簡報，檔名預計存為 slides/XXXXXXX_101.html。
+
+請務必遵守以下要求：
+1. 純單檔零依賴：所有 CSS 與 JavaScript 全部寫在同一個 .html 檔內，不引入任何外部 CDN 或圖片連結。
+2. 操作功能：支援鍵盤左右方向鍵、空白鍵換頁，並在畫面右下角提供「上一頁 / 下一頁 / 頁碼」控制列，整體採 16:9 滿版卡片排版。
+3. 圖解與極簡文字：全份簡報約 6–8 張投影片（涵蓋：封面、基礎設定、場地與站位圖解、計分方式、比賽流程與換人/發球規則、常見違例與犯規、觀賽冷知識），每張投影片只講 1 個重點，並在場地與站位投影片中內嵌 <svg> 向量示意圖（請確保球場標線比例與方向正確）。
+4. 同步日誌：請一併提供這次要追加進 log.md 的更新文字。
+
+Step 5：瀏覽器預覽與簡報存檔
+動作：將 HTML 程式碼存成 slides/XXXXXXX_101.html（建議下載到電腦桌面，用瀏覽器雙擊打開測試左右鍵翻頁與 SVG 圖形是否跑版）。
+
+存檔：確認無誤後 Commit 進 GitHub，並把 Copilot 給你的簡報日誌片段追加進 log.md 最末端。
+
+階段二：知識庫升級與發布（定期或達成里程碑時執行）
+
+Step 6：每累積滿 3 種球類，執行 Workflow C（Lint 巡檢與跨運動連結）
+動作：當你完成 3 種以上的球類後（例如排球、籃球、羽球），對 Copilot 發出這句指令，讓知識庫產生「跨運動複利」：
+請幫我執行AGENTS.md中的 Workflow C（Lint），檢查目前 wiki/sports/ 內所有球類頁面的格式與年份是否一致，並主動在 wiki/concepts/ 幫我生成 1～2 份有價值的「跨運動規則比較表」，同時告訴我要在各運動主頁加上哪些 [[雙括號連結]]。
+存檔：將生成的比較表存進 wiki/concepts/，並依指示更新 index.md 與 log.md。
