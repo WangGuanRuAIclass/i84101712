@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0f172a">
+  <title>桌球入門｜Table Tennis 101</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0f172a;--panel:#172554;--text:#f8fafc;--muted:#cbd5e1;--orange:#f97316;--cyan:#38bdf8;--line:#334155}
+    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+    body{display:grid;place-items:center}.deck{position:relative;width:min(100vw,177.7778vh);height:min(100vh,56.25vw);overflow:hidden;background:radial-gradient(ellipse at 85% 12%,#1e3a5f 0,transparent 35%),var(--bg);box-shadow:0 24px 80px #0008}
+    .slide{position:absolute;inset:0;padding:7.2% 8%;display:grid;grid-template-rows:auto 1fr auto;gap:2.4%;opacity:0;visibility:hidden;transform:translateX(2%);transition:opacity .28s ease,transform .28s ease;}
+    .slide.active{opacity:1;visibility:visible;transform:none}.eyebrow{margin:0 0 .65em;color:var(--orange);font-size:clamp(12px,1.15vw,18px);font-weight:800;letter-spacing:.14em;text-transform:uppercase}.heading{margin:0;font-size:clamp(28px,4.2vw,64px);line-height:1.08;letter-spacing:-.03em}.content{align-self:center;min-height:0}.foot{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:clamp(11px,1vw,15px)}
+    .cover{align-content:center;grid-template-rows:auto auto auto}.cover h1{max-width:9em;font-size:clamp(48px,8.2vw,124px);line-height:.98;letter-spacing:-.06em}.cover h1 span{display:block;color:var(--orange)}.cover .dek{max-width:36em;margin:1.4em 0 0;color:var(--muted);font-size:clamp(16px,1.7vw,25px)}.pill{display:inline-flex;margin-top:1.8em;padding:.55em .9em;border:1px solid #ffffff2a;border-radius:99px;color:#fed7aa;font-size:clamp(12px,1vw,16px)}
+    .bigstat{display:grid;grid-template-columns:repeat(3,1fr);gap:2%;margin:2.5% 0}.stat{padding:5% 7%;border:1px solid #ffffff20;border-radius:20px;background:#ffffff08}.stat strong{display:block;color:var(--orange);font-size:clamp(30px,5vw,74px);line-height:1.05}.stat span{display:block;margin-top:.55em;color:var(--muted);font-size:clamp(13px,1.3vw,20px)}.note{color:var(--muted);font-size:clamp(13px,1.3vw,19px)}
+    .court-layout{display:grid;grid-template-columns:1.25fr .75fr;align-items:center;gap:4%;height:100%}.court-wrap{padding:2%;border-radius:18px;background:#f8fafc;box-shadow:0 18px 50px #0005}.court-wrap svg{display:block;width:100%;height:auto}.court-notes h3{margin:0 0 .8em;color:var(--cyan);font-size:clamp(17px,2vw,29px)}.court-notes ul,.bullets{margin:0;padding:0;list-style:none}.court-notes li,.bullets li{position:relative;margin:.75em 0;padding-left:1.15em;color:var(--muted);font-size:clamp(14px,1.45vw,22px);line-height:1.4}.court-notes li::before,.bullets li::before{content:"";position:absolute;left:0;top:.48em;width:.48em;height:.48em;border-radius:50%;background:var(--orange)}
+    .score-row{display:flex;align-items:center;gap:3%;margin:3% 0}.score-card{flex:1;padding:4%;border:1px solid #ffffff20;border-radius:20px;background:#ffffff08;text-align:center}.score-card strong{display:block;color:var(--orange);font-size:clamp(36px,6vw,88px)}.score-card span{color:var(--muted);font-size:clamp(14px,1.4vw,21px)}.versus{color:var(--cyan);font-size:clamp(22px,3vw,44px);font-weight:900}.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:2%;margin:3% 0}.step{position:relative;min-height:150px;padding:8% 7%;border:1px solid #ffffff20;border-radius:18px;background:#ffffff08}.step b{display:block;margin-bottom:.6em;color:var(--orange);font-size:clamp(15px,1.4vw,21px)}.step span{color:var(--muted);font-size:clamp(13px,1.2vw,18px);line-height:1.4}.step:not(:last-child)::after{content:"›";position:absolute;right:-.62em;top:35%;z-index:2;color:var(--cyan);font-size:clamp(24px,3vw,44px);font-weight:900}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:5%;align-items:center}.callout{padding:5%;border-left:5px solid var(--orange);border-radius:0 16px 16px 0;background:#ffffff08;color:var(--muted);font-size:clamp(14px,1.4vw,21px);line-height:1.5}.callout strong{color:var(--text)}.controls{position:absolute;right:2.5%;bottom:2.5%;z-index:5;display:flex;align-items:center;gap:.55rem;padding:.45rem;border:1px solid #ffffff22;border-radius:999px;background:#0b1220eF;box-shadow:0 8px 30px #0006}.controls button{border:0;border-radius:999px;padding:.65em 1em;background:#1e293b;color:var(--text);font:inherit;font-size:clamp(11px,.95vw,15px);cursor:pointer}.controls button:hover:not(:disabled){background:var(--orange);color:#111827}.controls button:disabled{opacity:.42;cursor:not-allowed}.page{min-width:4.4em;text-align:center;color:var(--muted);font-size:clamp(11px,.95vw,15px)}
+    @media(max-width:700px){.slide{padding:7% 6% 14%;gap:2%}.court-layout{grid-template-columns:1fr;align-content:center;gap:3%}.court-wrap{max-width:620px;width:100%;margin:auto}.court-notes ul{display:grid;grid-template-columns:1fr 1fr;gap:0 4%}.court-notes li{margin:.35em 0}.flow{gap:1%}.step{min-height:0;padding:8% 5%}.step:not(:last-child)::after{right:-.48em}.controls{right:2%;bottom:2%}.two-col{gap:3%}}
+    @media(prefers-reduced-motion:reduce){.slide{transition:none}}
+  </style>
+</head>
+<body>
+  <main class="deck" id="deck" aria-label="桌球入門簡報">
+    <section class="slide cover active" aria-hidden="false">
+      <p class="eyebrow">TABLE TENNIS · 101</p>
+      <h1>桌球<span>入門</span></h1>
+      <p class="dek">看懂球桌、發球與計分，掌握每一拍的勝負關鍵。</p>
+      <span class="pill">入門版｜規則版本：待查證</span>
+      <div class="foot"><span>一顆球，來回之間決定一分</span><span>01 / 07</span></div>
+    </section>
+
+    <section class="slide" aria-hidden="true">
+      <header><p class="eyebrow">01 · 場地與形式</p><h2 class="heading">一張球桌，兩種對決</h2></header>
+      <div class="content">
+        <div class="bigstat">
+          <div class="stat"><strong>1 對 1</strong><span>單打：各自守住半場</span></div>
+          <div class="stat"><strong>2 對 2</strong><span>雙打：依序輪流擊球</span></div>
+          <div class="stat"><strong>274 × 152.5</strong><span>球桌長 × 寬（公分）</span></div>
+        </div>
+        <p class="note">桌面離地 76 公分；球網高 15.25 公分。場地數據依來源整理，適用版本待查證。</p>
+      </div>
+      <div class="foot"><span>單打與雙打，共用同一張球桌</span><span>02 / 07</span></div>
+    </section>
+
+    <section class="slide" aria-hidden="true">
+      <header><p class="eyebrow">02 · 場地圖解</p><h2 class="heading">雙打發球：斜線過網</h2></header>
+      <div class="content court-layout">
+        <div class="court-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 390" role="img" aria-labelledby="courtTitle courtDesc">
+            <title id="courtTitle">桌球球桌與雙打發球方向示意</title>
+            <desc id="courtDesc">球桌長寬比例約為1.80比1，球網位於球桌長度中央。發球由發球方右半區斜向接球方右半區，中線沿長邊方向。</desc>
+            <defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#fbbf24"/></marker></defs>
+            <rect x="40" y="42" width="560" height="312" rx="4" fill="#2563eb" stroke="#fff" stroke-width="5"/>
+            <line x1="320" y1="42" x2="320" y2="354" stroke="#f97316" stroke-width="8"/>
+            <line x1="40" y1="198" x2="600" y2="198" stroke="#fff" stroke-width="3" stroke-dasharray="8 7"/>
+            <text x="175" y="78" fill="#fff" font-size="18" text-anchor="middle">接球方右半區</text>
+            <text x="465" y="326" fill="#fff" font-size="18" text-anchor="middle">發球方右半區</text>
+            <text x="320" y="187" fill="#fff" font-size="15" text-anchor="middle">球網</text>
+            <line x1="468" y1="285" x2="172" y2="105" stroke="#fbbf24" stroke-width="7" marker-end="url(#arrow)"/>
+            <text x="320" y="382" fill="#334155" font-size="16" text-anchor="middle">俯視圖｜長寬比例依球桌尺寸繪製</text>
+          </svg>
+        </div>
+        <aside class="court-notes"><h3>看圖記方向</h3><ul><li>橘線：球網，橫跨球桌寬度</li><li>白虛線：雙打中線，沿球桌長度</li><li>黃箭頭：右半區斜線發球</li><li>單打發球不要求斜線</li></ul></aside>
+      </div>
+      <div class="foot"><span>圖示方向：發球方在右，接球方在左</span><span>03 / 07</span></div>
+    </section>
+
+    <section class="slide" aria-hidden="true">
+      <header><p class="eyebrow">03 · 計分方式</p><h2 class="heading">11 分起跑，10 平要拉開 2 分</h2></header>
+      <div class="content">
+        <div class="score-row"><div class="score-card"><strong>11</strong><span>先到 11 分，通常拿下一局</span></div><div class="versus">→</div><div class="score-card"><strong>2</strong><span>10 平後，須領先 2 分</span></div></div>
+        <div class="callout"><strong>一場比賽：</strong>常見五局三勝；部分賽事採七局四勝。實際局數依賽事規程，版本待查證。</div>
+      </div>
+      <div class="foot"><span>所以 10：10 後不會在 11 分自動結束</span><span>04 / 07</span></div>
+    </section>
+
+    <section class="slide" aria-hidden="true">
+      <header><p class="eyebrow">04 · 回合與發球</p><h2 class="heading">發球輪替，雙打照順序接力</h2></header>
+      <div class="content">
+        <div class="flow">
+          <div class="step"><b>① 發球</b><span>張開手掌向上拋球；來源列至少 16 公分。</span></div>
+          <div class="step"><b>② 回擊</b><span>接球方回球，雙方輪流讓球合法落桌。</span></div>
+          <div class="step"><b>③ 輪發球</b><span>一般每 2 分換發球；10 平後每分輪替。</span></div>
+          <div class="step"><b>④ 雙打輪序</b><span>發球、接發、發球同伴、接發同伴。</span></div>
+        </div>
+        <p class="note">每局後換邊；決勝局一方先得 5 分時再換邊。詳細發球規定與休息安排以現行規則、賽事公告為準。</p>
+      </div>
+      <div class="foot"><span>雙打發球從右半區斜向對方右半區</span><span>05 / 07</span></div>
+    </section>
+
+    <section class="slide" aria-hidden="true">
+      <header><p class="eyebrow">05 · 常見失分</p><h2 class="heading">別讓自己的動作送分</h2></header>
+      <div class="content two-col">
+        <ul class="bullets">
+          <li>同一球連續用球拍擊打兩次</li>
+          <li>雙打沒有依規定順序輪流回擊</li>
+          <li>非持拍手碰桌，或碰到球網組件</li>
+          <li>球碰桌面側邊，不算有效落桌</li>
+        </ul>
+        <div class="callout"><strong>球發球碰網？</strong><br>先別自行停下或拿球，繼續回合並由裁判判定是否重發。判例細節依規則版本確認。</div>
+      </div>
+      <div class="foot"><span>看球落點與擊球次序，比猜判決更可靠</span><span>06 / 07</span></div>
+    </section>
+
+    <section class="slide" aria-hidden="true">
+      <header><p class="eyebrow">06 · 觀賽冷知識</p><h2 class="heading">球碰「上邊」也可能是好球</h2></header>
+      <div class="content two-col">
+        <div>
+          <div class="score-card" style="text-align:left"><strong style="font-size:clamp(26px,4vw,58px)">上邊緣 ≠ 側面</strong><span>球碰桌面上方邊緣通常有效；碰側面或底部則不是有效落點。</span></div>
+        </div>
+        <ul class="bullets">
+          <li>雙打中線屬於該半區</li>
+          <li>10 平後，比分可能超過 11 分</li>
+          <li>規則版本未註明，賽事細節請查主辦公告</li>
+        </ul>
+      </div>
+      <div class="foot"><span>記住：邊緣的上表面與側面是兩回事</span><span>07 / 07</span></div>
+    </section>
+
+    <nav class="controls" aria-label="投影片控制">
+      <button id="prev" type="button" aria-label="上一頁">上一頁</button>
+      <span class="page" id="page" aria-live="polite">1 / 7</span>
+      <button id="next" type="button" aria-label="下一頁">下一頁</button>
+    </nav>
+  </main>
+  <script>
+    (()=>{
+      const slides=[...document.querySelectorAll('.slide')];
+      const prev=document.getElementById('prev'),next=document.getElementById('next'),page=document.getElementById('page');
+      let current=0;
+      function show(index){
+        current=Math.max(0,Math.min(slides.length-1,index));
+        slides.forEach((slide,i)=>{const active=i===current;slide.classList.toggle('active',active);slide.setAttribute('aria-hidden',String(!active));});
+        page.textContent=`${current+1} / ${slides.length}`;
+        prev.disabled=current===0;next.disabled=current===slides.length-1;
+      }
+      prev.addEventListener('click',()=>show(current-1));
+      next.addEventListener('click',()=>show(current+1));
+      document.addEventListener('keydown',event=>{
+        if(event.altKey||event.ctrlKey||event.metaKey)return;
+        if(event.key==='ArrowLeft'){event.preventDefault();show(current-1);}
+        else if(event.key==='ArrowRight'||event.key===' '){event.preventDefault();show(current+1);}
+        else if(event.key==='Home')show(0);
+        else if(event.key==='End')show(slides.length-1);
+      });
+      show(0);
+    })();
+  </script>
+</body>
+</html>
