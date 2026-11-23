@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>網球入門｜一局一盤看懂比賽</title>
+<style>
+:root{color-scheme:dark;--bg:#0f172a;--panel:#172338;--ink:#f8fafc;--muted:#cbd5e1;--orange:#f97316;--lime:#a3e635;--line:#334155}
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0}body{display:grid;place-items:center;overflow:hidden;background:radial-gradient(ellipse at 15% 15%,#20334c 0,transparent 42%),var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif}
+.deck{position:relative;width:min(100vw,177.78vh);height:min(100vh,56.25vw);overflow:hidden;background:linear-gradient(135deg,#111c2f,#0f172a 65%);border:1px solid #334155;box-shadow:0 24px 80px #0008}
+.slide{position:absolute;inset:0;display:none;padding:6.5% 7% 8%;overflow:hidden}.slide.active{display:flex;flex-direction:column;justify-content:center;animation:appear .24s ease-out}@keyframes appear{from{opacity:.45;transform:translateX(10px)}to{opacity:1;transform:none}}
+.kicker{margin:0 0 1.3rem;color:var(--lime);font-size:clamp(12px,1.1vw,19px);font-weight:800;letter-spacing:.14em}h1{max-width:950px;margin:0;font-size:clamp(44px,7vw,100px);line-height:1.04;letter-spacing:-.04em}h2{max-width:1000px;margin:0 0 1.25rem;font-size:clamp(30px,4vw,58px);line-height:1.12;letter-spacing:-.025em}.accent{color:var(--orange)}.lead{max-width:900px;margin:1rem 0 0;color:var(--muted);font-size:clamp(18px,2vw,29px);line-height:1.5}.tag{display:inline-flex;align-self:flex-start;margin-top:1.7rem;padding:.5rem .85rem;border:1px solid #475569;border-radius:999px;color:#e2e8f0;font-size:clamp(12px,1vw,16px)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:.7rem}.metric{padding:1.1rem 1.2rem;border:1px solid var(--line);border-radius:16px;background:var(--panel)}.metric strong{display:block;color:var(--orange);font-size:clamp(26px,3.8vw,52px);line-height:1.1}.metric span{display:block;margin-top:.45rem;color:var(--muted);font-size:clamp(14px,1.3vw,20px)}.note,.small{margin-top:1rem;color:#cbd5e1;font-size:clamp(13px,1.15vw,18px);line-height:1.5}.court-layout{display:grid;grid-template-columns:1.2fr .8fr;align-items:center;gap:3%}.court-wrap{padding:.75rem;border-radius:18px;background:#f8fafc}.court{display:block;width:100%;height:auto}.facts{display:grid;gap:.7rem}.fact{padding:.7rem .9rem;border-left:4px solid var(--orange);background:var(--panel);border-radius:0 12px 12px 0;color:var(--muted);font-size:clamp(13px,1.25vw,19px);line-height:1.4}.fact b{color:var(--ink)}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:.9rem;margin-top:.6rem}.card{min-height:130px;padding:1rem 1.1rem;border:1px solid var(--line);border-radius:16px;background:var(--panel)}.card .num{color:var(--orange);font-size:clamp(22px,2.4vw,34px);font-weight:900}.card p{margin:.5rem 0 0;color:var(--muted);font-size:clamp(14px,1.4vw,21px);line-height:1.4}.split{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:.5rem}.panel{padding:1rem 1.2rem;border-radius:16px;background:var(--panel);border:1px solid var(--line)}.panel h3{margin:0 0 .55rem;color:var(--orange);font-size:clamp(19px,1.9vw,28px)}.panel ul{margin:.2rem 0 0;padding-left:1.15em;color:var(--muted);font-size:clamp(14px,1.35vw,20px);line-height:1.5}.panel li+li{margin-top:.25rem}
+.controls{position:absolute;right:2.5%;bottom:2.2%;z-index:5;display:flex;align-items:center;gap:.55rem}.controls button{padding:.55rem .85rem;border:1px solid #64748b;border-radius:10px;background:#172338;color:var(--ink);font:inherit;font-size:clamp(12px,1vw,16px);cursor:pointer}.controls button:hover:not(:disabled){background:#26374f;border-color:var(--orange)}.controls button:disabled{opacity:.42;cursor:not-allowed}.counter{min-width:4.7rem;text-align:center;color:#cbd5e1;font-variant-numeric:tabular-nums;font-size:clamp(12px,1vw,16px)}.progress{position:absolute;inset:auto 0 0;height:4px;background:#334155}.progress span{display:block;height:100%;width:14.285%;background:var(--orange);transition:width .2s}.hint{position:absolute;left:2.6%;bottom:2.8%;color:#94a3b8;font-size:clamp(11px,.9vw,14px)}
+@media(max-width:700px){.slide{padding:6% 5% 14%}.court-layout{grid-template-columns:1fr;gap:.4rem}.court-wrap{max-height:34vh}.court{max-height:34vh}.facts{grid-template-columns:1fr 1fr;gap:.4rem}.fact{padding:.45rem .6rem}.grid{gap:.5rem}.metric{padding:.65rem}.cards{gap:.5rem}.card{padding:.65rem;min-height:105px}.split{gap:.5rem}.panel{padding:.7rem}.controls{right:3%;bottom:2%}.hint{left:3%;bottom:3%}}
+@media(prefers-reduced-motion:reduce){.slide.active{animation:none}}
+</style>
+</head>
+<body>
+<main class="deck" aria-label="網球入門簡報">
+<section class="slide active" aria-label="第 1 張：封面">
+<p class="kicker">TENNIS · RULES FOR BEGINNERS</p><h1>網球，<br><span class="accent">一分一局一盤</span></h1><p class="lead">從 Love、15、30、40 開始，輕鬆看懂發球、場地與比賽節奏。</p><span class="tag">入門速讀｜單打 × 雙打</span>
+</section>
+<section class="slide" aria-label="第 2 張：基礎設定">
+<p class="kicker">01 / THE COURT</p><h2>同一座球場，<span class="accent">單打較窄、雙打較寬</span></h2><div class="grid"><div class="metric"><strong>23.77 m</strong><span>球場長度</span></div><div class="metric"><strong>8.23 m</strong><span>單打場地寬</span></div><div class="metric"><strong>10.97 m</strong><span>雙打場地寬</span></div></div><p class="note">網柱高 1.07 m；球網中央高 0.914 m。球落在線上，算界內。</p>
+</section>
+<section class="slide" aria-label="第 3 張：場地與站位圖解">
+<p class="kicker">02 / COURT & SERVE</p><h2>站在底線後，<span class="accent">斜線發球</span></h2><div class="court-layout"><div class="court-wrap">
+<svg class="court" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 390" role="img" aria-labelledby="court-title court-desc">
+<title id="court-title">網球場地按比例俯視圖與斜線發球方向</title><desc id="court-desc">場地長 23.77、公尺雙打寬 10.97 公尺，圖中長寬比例正確。橘色外框為雙打邊線，藍色內線為單打邊線；球網在場地中央。發球線位於球網兩側 6.40 公尺處，中央發球線分隔左右發球區。橘色箭頭表示從右側發球區斜向對方左側發球區。</desc>
+<defs><marker id="serveArrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#f97316"/></marker></defs>
+<rect x="50" y="72" width="520" height="240" fill="#166534" stroke="#f97316" stroke-width="5"/>
+<rect x="115" y="72" width="390" height="240" fill="none" stroke="#60a5fa" stroke-width="4"/>
+<line x1="310" y1="72" x2="310" y2="312" stroke="#fff" stroke-width="6"/>
+<line x1="170" y1="72" x2="170" y2="312" stroke="#86efac" stroke-width="3" stroke-dasharray="8 6"/>
+<line x1="450" y1="72" x2="450" y2="312" stroke="#86efac" stroke-width="3" stroke-dasharray="8 6"/>
+<line x1="170" y1="192" x2="450" y2="192" stroke="#fff" stroke-width="3"/>
+<line x1="420" y1="250" x2="215" y2="134" stroke="#f97316" stroke-width="6" marker-end="url(#serveArrow)"/>
+<text x="310" y="48" fill="#0f172a" font-size="17" font-weight="700" text-anchor="middle">雙打寬 10.97 m</text>
+<text x="310" y="345" fill="#0f172a" font-size="16" text-anchor="middle">場地長 23.77 m ｜ 藍線內寬 8.23 m（單打）</text>
+<text x="310" y="185" fill="#fff" font-size="15" text-anchor="middle">球網</text>
+<text x="163" y="91" fill="#fff" font-size="13" text-anchor="end">發球線</text>
+<text x="458" y="91" fill="#fff" font-size="13">發球線</text>
+<text x="400" y="269" fill="#fff" font-size="13" text-anchor="middle">發球方右區</text>
+<text x="220" y="125" fill="#fff" font-size="13">對角接球區</text>
+<text x="310" y="374" fill="#334155" font-size="12" text-anchor="middle">線位按標準場地比例示意；發球方向以接球者視角判讀。</text>
+</svg></div><div class="facts"><div class="fact"><b>外橘線</b><br>雙打側邊界；藍線是單打邊界。</div><div class="fact"><b>球網居中</b><br>中線把兩邊場區平分。</div><div class="fact"><b>發球斜對角</b><br>右、左發球區交替使用。</div><div class="fact"><b>發球員位置</b><br>底線後、中心標與邊線延長線之間。</div></div></div><p class="small">俯視圖按 23.77 : 10.97 的長寬比例繪製；方向箭頭僅示意發球方向。</p>
+</section>
+<section class="slide" aria-label="第 4 張：計分方式">
+<p class="kicker">03 / SCORING</p><h2>比分不是 1、2、3：<span class="accent">Love → 15 → 30 → 40</span></h2><div class="cards"><div class="card"><span class="num">Love</span><p>代表 0 分；贏一球，往下一格。</p></div><div class="card"><span class="num">Deuce</span><p>40 平後，要連贏兩分才能拿下局。</p></div><div class="card"><span class="num">6 局</span><p>常見一盤先贏 6 局並領先 2 局。</p></div></div><p class="lead">決勝局常見先到 7 分且領先 2 分；賽制依賽事規程。</p>
+</section>
+<section class="slide" aria-label="第 5 張：比賽流程與發球規則">
+<p class="kicker">04 / SERVE & FLOW</p><h2>每局輪流發球，<span class="accent">每分左右交替</span></h2><div class="split"><div class="panel"><h3>一分怎麼開始</h3><ul><li>發球員站底線後。</li><li>球斜向落入對角發球區。</li><li>右、左發球區交替。</li><li>一發失誤，可再發一次。</li></ul></div><div class="panel"><h3>輪替與換邊</h3><ul><li>每局結束，雙方交換發球角色。</li><li>雙打搭檔排定發球與接球順序。</li><li>每盤單數局後換邊。</li><li>決勝局每 6 分換邊。</li></ul></div></div><p class="small">網球一般沒有場上「換人」；雙打按既定順序輪流發球。休息與賽事特殊規定依主辦單位公告 [待查證]。</p>
+</section>
+<section class="slide" aria-label="第 6 張：常見違例與失分">
+<p class="kicker">05 / FAULTS & POINTS</p><h2>兩次發球失誤，<span class="accent">就丟掉這一分</span></h2><div class="cards"><div class="card"><span class="num">腳失誤</span><p>發球時踩到底線或其延長線。</p></div><div class="card"><span class="num">連續失誤</span><p>兩次發球都失誤，對手得分。</p></div><div class="card"><span class="num">回球太晚</span><p>球在己方落地兩次前，必須回擊過網。</p></div></div><p class="lead">觸網、球未過網就截擊，也可能失去該分。</p>
+</section>
+<section class="slide" aria-label="第 7 張：觀賽冷知識">
+<p class="kicker">06 / WATCH SMART</p><h2>判界時記住：<span class="accent">壓線就是界內</span></h2><div class="split"><div class="panel"><h3>單打 vs 雙打</h3><ul><li>單打看內側邊線。</li><li>雙打看外側邊線。</li><li>同一場地，寬度判定不同。</li></ul></div><div class="panel"><h3>看懂比分節奏</h3><ul><li>每局從 Love 起步。</li><li>40 平後先拿一分叫 Advantage。</li><li>再贏一分才真正拿下該局。</li></ul></div></div><p class="lead">球落在線上算界內；正式賽制可能不同，觀賽時以賽事公告為準。</p><p class="small">本簡報依據 wiki 入門整理；來源未標示規則年份，規則版本與賽制細節 [待查證]。</p>
+</section>
+<div class="hint">鍵盤 ← → 或 Space 換頁</div><nav class="controls" aria-label="投影片控制"><button id="prev" type="button" aria-label="上一頁">上一頁</button><span id="counter" class="counter" aria-live="polite">1 / 7</span><button id="next" type="button" aria-label="下一頁">下一頁</button></nav><div class="progress" aria-hidden="true"><span id="bar"></span></div>
+</main>
+<script>
+(()=>{const slides=[...document.querySelectorAll('.slide')],prev=document.getElementById('prev'),next=document.getElementById('next'),counter=document.getElementById('counter'),bar=document.getElementById('bar');let current=0;function show(i){current=Math.max(0,Math.min(slides.length-1,i));slides.forEach((s,n)=>{s.classList.toggle('active',n===current);s.setAttribute('aria-hidden',n===current?'false':'true')});counter.textContent=`${current+1} / ${slides.length}`;prev.disabled=current===0;next.disabled=current===slides.length-1;bar.style.width=`${(current+1)/slides.length*100}%`;document.title=`網球入門｜${current+1} / ${slides.length}`}prev.addEventListener('click',()=>show(current-1));next.addEventListener('click',()=>show(current+1));document.addEventListener('keydown',e=>{if(e.altKey||e.ctrlKey||e.metaKey)return;if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();show(current+1)}else if(e.key==='ArrowLeft'){e.preventDefault();show(current-1)}});show(0)})();
+</script>
+</body>
+</html>
